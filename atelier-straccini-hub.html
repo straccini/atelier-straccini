@@ -4,318 +4,842 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Atelier Straccini — Hub Gastronomico</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Atelier Straccini</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,600&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:16px;-webkit-tap-highlight-color:transparent}
-body{background:#fff;color:#0e0e0e;font-family:'Jost',sans-serif;font-weight:400;min-height:100vh;overflow-x:hidden}
-:root{
-  --ink:#0e0e0e;--ink2:#555;--muted:#888;--border:#e8e8e8;--bg2:#f8f8f8;
-  --md-dk:#2C1810;--md-mid:#5C3317;--md-gold:#C9A96E;--md-cream:#F5EFE4;
-  --gf-dk:#1A2E0D;--gf-acc:#6B9E4A;--gf-cream:#EEF4E6;
+/* ═══════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════ */
+:root {
+  --navy:    #0C1B33;
+  --navy2:   #1A2E4A;
+  --navy3:   #243B55;
+  --steel:   #2B5FAC;
+  --steel2:  #4A7FC1;
+  --fog:     #8B95A3;
+  --mist:    #C4CAD4;
+  --silver:  #E2E6EC;
+  --pearl:   #F0F3F7;
+  --white:   #FAFCFF;
+  --ink:     #0C1B33;
+  --gold:    #C9A96E;
+  --sage:    #4A7C59;
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'EB Garamond', Georgia, serif;
+  --font-ui:      'DM Sans', system-ui, sans-serif;
+
+  --r-sm: 2px;
+  --r-md: 4px;
+  --r-lg: 8px;
+
+  --shadow-sm: 0 1px 4px rgba(12,27,51,.08);
+  --shadow-md: 0 4px 16px rgba(12,27,51,.12);
+  --shadow-lg: 0 8px 32px rgba(12,27,51,.16);
+
+  --nav-h: 64px;
+  --hdr-h: 58px;
 }
-#app{max-width:520px;margin:0 auto;min-height:100vh;position:relative;padding-bottom:68px}
 
-/* HEADER */
-.hdr{padding:1.4rem 1.4rem 1rem;border-bottom:1px solid var(--ink);position:sticky;top:0;z-index:50;background:#fff;display:flex;align-items:flex-end;justify-content:space-between}
-.hdr-logo{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;letter-spacing:.1em;text-transform:uppercase;line-height:1}
-.hdr-logo em{font-style:italic}
-.hdr-sub{font-size:.58rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:.2rem}
-.hdr-acts{display:flex;gap:.4rem}
-.hbtn{width:36px;height:36px;border:1px solid var(--ink);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;color:var(--ink)}
-.hbtn:hover,.hbtn.on{background:var(--ink);color:#fff}
-.hbtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+/* ═══════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
 
-/* SEARCH */
-.srchbar{overflow:hidden;max-height:0;background:#fff;transition:all .3s ease;border-bottom:0px solid var(--border)}
-.srchbar.open{max-height:300px;border-bottom-width:1px}
-.srch-inner{padding:.7rem 1.4rem .5rem;display:flex;align-items:center;gap:.6rem;border-bottom:1.5px solid var(--ink)}
-.srch-inner input{flex:1;border:none;outline:none;font-family:'Jost',sans-serif;font-size:.88rem;font-weight:300;background:transparent;color:var(--ink)}
-.srch-inner input::placeholder{color:#bbb}
-.srch-inner svg{width:13px;height:13px;stroke:#999;fill:none;stroke-width:1.5;flex-shrink:0}
-.srch-results{max-height:210px;overflow-y:auto;padding:0 1.4rem}
-.srch-item{display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid var(--border);cursor:pointer}
-.srch-item:last-child{border-bottom:none}
-.srch-ico{font-size:20px;width:28px;text-align:center}
-.srch-name{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:500;line-height:1.2}
-.srch-sec{font-size:.58rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+body {
+  background: var(--white);
+  color: var(--navy);
+  font-family: var(--font-ui);
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* Subtle paper grain */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+}
 
-/* BOTTOM NAV */
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:#fff;border-top:1px solid var(--ink);display:flex;z-index:100}
-.bni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px 12px;cursor:pointer;border:none;background:none;font-family:'Jost',sans-serif;font-size:.54rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);transition:color .18s}
-.bni.on{color:var(--ink)}
-.bni.md.on{color:var(--md-gold)}
-.bni.gf.on{color:var(--gf-acc)}
-.bni-ico{font-size:16px;line-height:1}
+#app { max-width: 520px; margin: 0 auto; min-height: 100vh; padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px)); }
 
-/* VIEWS */
-.view{display:none;padding:0 1.4rem 1.5rem;animation:vIn .22s ease}
-.view.on{display:block}
-@keyframes vIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+/* ═══════════════════════════════════════
+   CUSTOM INK ICONS (SVG inline)
+═══════════════════════════════════════ */
+.ico { display: inline-flex; align-items: center; justify-content: center; }
+.ico svg { display: block; }
 
-/* HOME */
-.home-hero{padding:1.8rem 0 1.5rem;text-align:center;border-bottom:1px solid var(--border)}
-.home-date{font-size:.58rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem}
-.home-title{font-family:'Cormorant Garamond',serif;font-size:2.3rem;font-weight:300;line-height:1.1}
-.home-title em{font-style:italic}
-.home-title strong{font-weight:600}
-.home-tagline{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:var(--muted);margin-top:.5rem;line-height:1.5}
-.sec-cards{display:flex;flex-direction:column;gap:.6rem;margin:1.3rem 0}
-.sec-card{border:1px solid var(--border);padding:1rem 1.1rem;cursor:pointer;display:flex;align-items:center;gap:.9rem;background:#fff;text-align:left;transition:border-color .18s;width:100%;font-family:inherit}
-.sec-card:hover{border-color:var(--ink)}
-.sc-stripe{width:3px;height:44px;border-radius:2px;flex-shrink:0}
-.sc-ico{font-size:22px;flex-shrink:0}
-.sc-body{flex:1;min-width:0}
-.sc-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-style:italic;font-weight:500;line-height:1.2}
-.sc-desc{font-size:.67rem;color:var(--muted);margin-top:.2rem;line-height:1.4}
-.sc-cnt{font-size:.58rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:.3rem}
-.sc-cnt.md{color:var(--md-gold)}.sc-cnt.gf{color:var(--gf-acc)}.sc-cnt.rc{color:var(--ink2)}
-.news-bar{display:flex;align-items:center;justify-content:space-between;padding:1rem 0 .5rem}
-.news-bar-t{font-size:.57rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase}
-.btn-ghost-sm{border:1px solid var(--ink);background:none;cursor:pointer;font-family:'Jost',sans-serif;font-size:.64rem;font-weight:500;letter-spacing:.08em;padding:.3rem .8rem;transition:all .18s}
-.btn-ghost-sm:hover{background:var(--ink);color:#fff}
-.news-card{border:1px solid var(--border);padding:.9rem 1rem;margin-bottom:.55rem;cursor:pointer;transition:border-color .18s}
-.news-card:hover{border-color:var(--ink)}
-.news-cat-lbl{font-size:.55rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem}
-.news-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:500;line-height:1.25}
-.news-prev{font-size:.75rem;color:var(--muted);margin-top:.22rem;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.news-meta-s{font-size:.58rem;color:var(--muted);margin-top:.4rem}
+/* ═══════════════════════════════════════
+   HEADER
+═══════════════════════════════════════ */
+.hdr {
+  height: var(--hdr-h);
+  background: var(--white);
+  border-bottom: 1px solid var(--silver);
+  position: sticky; top: 0; z-index: 60;
+  display: flex; align-items: center;
+  padding: 0 1.25rem;
+  gap: 1rem;
+}
 
-/* SECTION HEADER */
-.sec-hdr{padding:1rem 0 .8rem;border-bottom:1px solid var(--ink);display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;margin-bottom:0}
-.sec-hdr-l .sec-ttl{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-style:italic;font-weight:400}
-.sec-hdr-l .sec-sub{font-size:.57rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:.12rem}
-.btn-add{border:none;background:var(--ink);color:#fff;cursor:pointer;font-family:'Jost',sans-serif;font-size:.64rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:.5rem 1rem;flex-shrink:0;transition:opacity .18s;margin-top:.25rem}
-.btn-add:hover{opacity:.8}
-.btn-add.md{background:var(--md-dk)}
-.btn-add.gf{background:var(--gf-dk)}
+.hdr-brand { flex: 1; }
+.hdr-wordmark {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--navy);
+  line-height: 1;
+}
+.hdr-wordmark em { font-style: italic; font-weight: 400; color: var(--steel); }
+.hdr-tagline {
+  font-family: var(--font-ui);
+  font-size: .58rem;
+  font-weight: 300;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  color: var(--fog);
+  margin-top: .18rem;
+  transition: opacity .3s;
+}
 
-/* FILTER TABS */
-.filter-tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none;gap:0;margin-bottom:.3rem}
-.filter-tabs::-webkit-scrollbar{display:none}
-.ftab{border:none;background:none;cursor:pointer;font-family:'Jost',sans-serif;font-size:.61rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;padding:.5rem .9rem;white-space:nowrap;color:var(--muted);border-bottom:2px solid transparent;transition:all .18s;margin-bottom:-1px}
-.ftab.on{color:var(--ink);border-bottom-color:var(--ink)}
+.hdr-acts { display: flex; gap: .35rem; }
+.hdr-btn {
+  width: 34px; height: 34px;
+  border: 1px solid var(--silver);
+  background: transparent;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-sm);
+  color: var(--navy2);
+  transition: all .18s;
+  position: relative;
+}
+.hdr-btn:hover, .hdr-btn.on { background: var(--navy); border-color: var(--navy); color: var(--white); }
+.hdr-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 
-/* RECIPE CARDS */
-.rec-list{margin-top:.4rem}
-.rcard{display:flex;align-items:center;gap:.9rem;padding:.9rem 0;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
-.rcard:active{opacity:.6}
-.rcard-ico{width:46px;height:46px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
-.rcard-body{flex:1;min-width:0}
-.rcard-cat{font-size:.55rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.12rem}
-.rcard-name{font-family:'Cormorant Garamond',serif;font-size:1.08rem;font-weight:500;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rcard-desc{font-size:.7rem;color:var(--muted);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rcard-arr{color:#ccc;font-size:14px;flex-shrink:0}
+/* ═══════════════════════════════════════
+   SEARCH BAR
+═══════════════════════════════════════ */
+.srchbar {
+  background: var(--white);
+  overflow: hidden; max-height: 0;
+  border-bottom: 0 solid var(--silver);
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+}
+.srchbar.open { max-height: 280px; border-bottom-width: 1px; }
+.srch-row {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .7rem 1.25rem;
+  border-bottom: 1.5px solid var(--navy);
+  margin: .5rem 1.25rem 0;
+}
+.srch-row input {
+  flex: 1; border: none; outline: none;
+  font-family: var(--font-ui); font-size: .88rem; font-weight: 300;
+  background: transparent; color: var(--navy);
+  letter-spacing: .02em;
+}
+.srch-row input::placeholder { color: var(--mist); }
+.srch-row svg { width: 14px; height: 14px; stroke: var(--fog); fill: none; stroke-width: 1.5; stroke-linecap: round; flex-shrink: 0; }
+.srch-results { padding: .4rem 1.25rem .6rem; max-height: 210px; overflow-y: auto; }
+.srch-item {
+  display: flex; align-items: center; gap: .9rem;
+  padding: .55rem 0; border-bottom: 1px solid var(--pearl);
+  cursor: pointer; transition: opacity .15s;
+}
+.srch-item:last-child { border-bottom: none; }
+.srch-item:hover { opacity: .7; }
+.srch-item-ico {
+  width: 32px; height: 32px;
+  border: 1px solid var(--silver);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.srch-item-name { font-family: var(--font-display); font-size: .95rem; line-height: 1.2; }
+.srch-item-sec { font-size: .58rem; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--fog); margin-top: .1rem; }
 
-/* EMPTY */
-.empty{text-align:center;padding:3.5rem 1rem 2rem;color:var(--muted)}
-.empty-ico{font-size:2.6rem;margin-bottom:.8rem;opacity:.4}
-.empty-t{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-style:italic;color:var(--ink);margin-bottom:.35rem}
-.empty-s{font-size:.75rem;line-height:1.6;max-width:240px;margin:0 auto .9rem}
-.btn-empty{border:1px solid var(--ink);background:#fff;cursor:pointer;font-family:'Jost',sans-serif;font-size:.67rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;padding:.55rem 1.2rem;transition:all .18s}
-.btn-empty:hover{background:var(--ink);color:#fff}
+/* ═══════════════════════════════════════
+   BOTTOM NAV
+═══════════════════════════════════════ */
+.bnav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 520px;
+  height: var(--nav-h);
+  background: var(--white);
+  border-top: 1px solid var(--silver);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  z-index: 60;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.bni {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; border: none; background: none; cursor: pointer;
+  color: var(--mist); transition: color .2s;
+  font-family: var(--font-ui); font-size: .52rem; font-weight: 500;
+  letter-spacing: .12em; text-transform: uppercase;
+  padding: 0; position: relative;
+}
+.bni.on { color: var(--navy); }
+.bni.on::after {
+  content: '';
+  position: absolute; top: 0; left: 20%; right: 20%;
+  height: 2px; background: var(--steel);
+}
+.bni svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; transition: stroke .2s; }
+.bni.on svg { stroke: var(--navy); }
 
-/* OVERLAY + SHEET */
-.ov{position:fixed;inset:0;background:rgba(14,14,14,.5);z-index:200;display:none;animation:fIn .22s}
-@keyframes fIn{from{opacity:0}to{opacity:1}}
-.sh{position:fixed;bottom:0;left:0;right:0;background:#fff;max-height:94vh;overflow-y:auto;z-index:201;transform:translateY(101%);transition:transform .34s cubic-bezier(.32,.72,0,1);max-width:520px;margin:0 auto;border-top:1.5px solid var(--ink);scrollbar-width:thin;scrollbar-color:#ddd transparent}
-.sh.op{transform:translateY(0)}
-.sh-drag{width:36px;height:2px;background:var(--ink);margin:1rem auto .4rem;opacity:.2;border-radius:2px}
-.sh-hdr{padding:.7rem 1.4rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
-.sh-ttl{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-style:italic;font-weight:400}
-.sh-cls{width:30px;height:30px;border:1px solid var(--border);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);transition:all .15s}
-.sh-cls:hover{border-color:var(--ink);color:var(--ink)}
-.sh-body{padding:1rem 1.4rem 2rem}
+/* ═══════════════════════════════════════
+   VIEWS
+═══════════════════════════════════════ */
+.view { display: none; animation: vIn .25s ease; }
+.view.on { display: block; }
+@keyframes vIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* FORMS */
-.fg{margin-bottom:.85rem}
-.fl{display:block;font-size:.58rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.28rem}
-.fc{width:100%;border:1px solid var(--border);background:#fff;padding:.5rem .7rem;font-family:'Jost',sans-serif;font-size:.88rem;color:var(--ink);outline:none;transition:border-color .18s;border-radius:0;-webkit-appearance:none;appearance:none}
-.fc:focus{border-color:var(--ink)}
-.fc.ta{resize:vertical;min-height:82px;line-height:1.6}
-.fr2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
-.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem}
-.f-sep{font-size:.58rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;padding:.8rem 0 .35rem;border-top:1px solid var(--border);margin-top:.3rem;color:var(--ink)}
-.btn-save{width:100%;border:none;background:var(--ink);color:#fff;font-family:'Jost',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:.85rem;cursor:pointer;margin-top:.9rem;transition:opacity .18s}
-.btn-save:hover{opacity:.85}
-.btn-save.md{background:var(--md-dk)}
-.btn-save.gf{background:var(--gf-dk)}
-.btn-del{width:100%;border:1px solid #c0392b;background:none;color:#c0392b;font-family:'Jost',sans-serif;font-size:.72rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:.65rem;cursor:pointer;margin-top:.45rem;transition:all .18s}
-.btn-del:hover{background:#c0392b;color:#fff}
+/* ═══════════════════════════════════════
+   HOME
+═══════════════════════════════════════ */
+.home-masthead {
+  padding: 1.8rem 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--silver);
+  position: relative; overflow: hidden;
+}
+.home-masthead::before {
+  content: '';
+  position: absolute; top: -40px; right: -40px;
+  width: 200px; height: 200px;
+  border: 1px solid var(--silver);
+  border-radius: 50%;
+  opacity: .4;
+}
+.home-date { font-size: .6rem; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: var(--fog); margin-bottom: .6rem; }
+.home-hl {
+  font-family: var(--font-display);
+  font-size: 2.2rem; font-weight: 400; line-height: 1.08;
+  color: var(--navy); letter-spacing: -.01em;
+}
+.home-hl em { font-style: italic; color: var(--steel); }
+.home-sub { font-family: var(--font-body); font-style: italic; font-size: .9rem; color: var(--fog); margin-top: .5rem; line-height: 1.55; }
 
-/* DETAIL */
-.d-title{font-family:'Cormorant Garamond',serif;font-size:1.75rem;font-weight:400;line-height:1.15;margin-bottom:.25rem}
-.d-meta-s{font-size:.61rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.7rem}
-.d-sec-lbl{font-size:.56rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding:.6rem 0 .3rem;border-top:1px solid var(--border);margin-top:.4rem}
-.d-cit{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;line-height:1.65;color:var(--muted);border-left:2px solid var(--md-gold);padding-left:.8rem;margin:.3rem 0}
-.d-music{background:var(--md-cream);padding:.5rem .8rem;display:flex;align-items:center;gap:.6rem;font-size:.8rem;margin:.35rem 0;font-style:italic;font-family:'Cormorant Garamond',serif;color:var(--md-dk)}
-.d-ing-list{list-style:none}
-.d-ing-li{display:flex;justify-content:space-between;align-items:baseline;padding:.38rem 0;border-bottom:1px dotted var(--border);font-family:'EB Garamond',serif;font-size:.95rem}
-.d-ing-li:last-child{border-bottom:none}
-.d-ing-qty{font-size:.78rem;color:var(--muted);text-align:right;white-space:nowrap;margin-left:.5rem}
-.d-step{display:flex;gap:.7rem;padding:.5rem 0;border-bottom:1px solid var(--border)}
-.d-step:last-child{border-bottom:none}
-.d-step-n{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:300;color:var(--muted);min-width:18px;line-height:1.3;flex-shrink:0}
-.d-step-t{font-family:'EB Garamond',serif;font-size:.95rem;line-height:1.65;color:#1a1a1a}
-.d-note-box{font-family:'EB Garamond',serif;font-size:.93rem;font-style:italic;color:#555;line-height:1.65;padding:.75rem 1rem;border-left:2px solid var(--ink);background:var(--bg2);margin:.3rem 0}
-.d-tag-row{display:flex;flex-wrap:wrap;gap:.4rem;margin:.3rem 0}
-.d-tag{font-size:.58rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--border);padding:.18rem .55rem;color:var(--muted)}
-.d-acts{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:1.1rem;padding-top:1rem;border-top:1px solid var(--border)}
-.d-btn{border:1px solid var(--border);background:#fff;cursor:pointer;font-family:'Jost',sans-serif;font-size:.67rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:.65rem;color:var(--ink);transition:all .18s}
-.d-btn:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
-.d-btn.danger:hover{background:#c0392b;border-color:#c0392b}
+/* Section nav cards */
+.sec-nav { padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+.sec-card {
+  display: flex; align-items: center; gap: 1rem;
+  padding: .9rem 1rem;
+  border: 1px solid var(--silver);
+  background: var(--white);
+  cursor: pointer;
+  text-align: left;
+  transition: all .2s;
+  position: relative; overflow: hidden;
+}
+.sec-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px; background: transparent;
+  transition: background .2s;
+}
+.sec-card:hover { border-color: var(--navy); }
+.sec-card:hover::before { background: var(--steel); }
+.sec-card.md::before { background: var(--gold); }
+.sec-card.gf::before { background: var(--sage); }
+.sec-card.rc::before { background: var(--steel); }
+.sc-ico-wrap {
+  width: 40px; height: 40px;
+  border: 1px solid var(--silver);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; background: var(--pearl);
+}
+.sc-ico-wrap svg { width: 22px; height: 22px; stroke: var(--navy2); fill: none; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.sc-body { flex: 1; min-width: 0; }
+.sc-name { font-family: var(--font-display); font-size: .95rem; font-style: italic; color: var(--navy); line-height: 1.2; }
+.sc-desc { font-size: .65rem; color: var(--fog); margin-top: .15rem; line-height: 1.4; }
+.sc-cnt { font-size: .58rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; margin-top: .25rem; }
+.sc-cnt.md { color: var(--gold); } .sc-cnt.gf { color: var(--sage); } .sc-cnt.rc { color: var(--steel); }
+.sc-arr { color: var(--mist); flex-shrink: 0; }
+.sc-arr svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.5; }
 
-/* SETTINGS */
-.set-row{padding:.8rem 0;border-bottom:1px solid var(--border)}
-.set-lbl{font-size:.85rem;font-weight:500}
-.set-sub{font-size:.68rem;color:var(--muted);margin-top:.12rem;line-height:1.45}
-.set-input{width:100%;border:1px solid var(--border);padding:.5rem .7rem;font-size:.82rem;font-family:'Jost',sans-serif;outline:none;margin-top:.5rem;border-radius:0;background:#fff}
-.set-input:focus{border-color:var(--ink)}
-.status-row{display:flex;align-items:center;gap:.6rem;margin-top:.5rem}
-.sdot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0}
-.sdot.ok{background:#5a9a6a}.sdot.err{background:#c0392b}
-.set-stat{font-size:.7rem;color:var(--muted)}
-.set-sep{font-size:.58rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;padding:.9rem 0 .5rem;margin-top:.5rem;border-top:1px solid var(--border)}
-.btn-mig{border:1px solid var(--md-dk);background:var(--md-cream);color:var(--md-dk);width:100%;font-family:'Jost',sans-serif;font-size:.72rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:.65rem;cursor:pointer;transition:all .18s;margin-top:.4rem}
-.btn-mig:hover{background:var(--md-dk);color:#fff}
-.set-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem}
-.btn-tool{border:1px solid var(--border);background:#fff;font-family:'Jost',sans-serif;font-size:.68rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:.6rem;cursor:pointer;transition:all .18s}
-.btn-tool:hover{border-color:var(--ink);background:var(--ink);color:#fff}
-.set-guide{font-size:.74rem;line-height:1.75;color:var(--muted)}
-.set-guide a{color:var(--ink)}
-.set-guide code{background:var(--bg2);padding:.05rem .35rem;font-size:.72rem}
+/* News feed */
+.feed-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .8rem 1.25rem .4rem;
+  border-top: 1px solid var(--silver);
+}
+.feed-lbl { font-size: .58rem; font-weight: 500; letter-spacing: .22em; text-transform: uppercase; color: var(--fog); }
+.btn-xs {
+  border: 1px solid var(--silver); background: transparent; cursor: pointer;
+  font-family: var(--font-ui); font-size: .62rem; font-weight: 500;
+  letter-spacing: .08em; padding: .28rem .75rem; color: var(--navy2);
+  transition: all .18s;
+}
+.btn-xs:hover { background: var(--navy); color: var(--white); border-color: var(--navy); }
+.news-item {
+  padding: .85rem 1.25rem;
+  border-bottom: 1px solid var(--pearl);
+  cursor: pointer; transition: background .15s;
+}
+.news-item:hover { background: var(--pearl); }
+.news-cat { font-size: .55rem; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--fog); margin-bottom: .22rem; }
+.news-ttl { font-family: var(--font-display); font-size: 1rem; line-height: 1.25; }
+.news-prev { font-family: var(--font-body); font-size: .85rem; color: var(--fog); margin-top: .2rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.news-date { font-size: .58rem; color: var(--mist); margin-top: .35rem; }
 
-/* TOAST */
-#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink);color:#fff;padding:.55rem 1.2rem;font-size:.75rem;font-weight:500;letter-spacing:.05em;opacity:0;pointer-events:none;transition:all .25s;z-index:400;white-space:nowrap;max-width:90vw;text-align:center;border-radius:0}
-#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.spin-c{padding:2rem;text-align:center}
-.spin{width:20px;height:20px;border:1.5px solid var(--border);border-top-color:var(--ink);border-radius:50%;animation:rot .7s linear infinite;margin:0 auto .6rem}
-@keyframes rot{to{transform:rotate(360deg)}}
+/* ═══════════════════════════════════════
+   SECTION HEADER (shared)
+═══════════════════════════════════════ */
+.sec-top {
+  padding: 1rem 1.25rem .8rem;
+  border-bottom: 1px solid var(--navy);
+  display: flex; align-items: flex-end; justify-content: space-between; gap: .8rem;
+}
+.sec-top-l .sec-ttl { font-family: var(--font-display); font-size: 1.4rem; font-style: italic; color: var(--navy); }
+.sec-top-l .sec-sub { font-size: .57rem; letter-spacing: .2em; text-transform: uppercase; color: var(--fog); margin-top: .12rem; }
+.btn-add {
+  border: none; background: var(--navy); color: var(--white);
+  font-family: var(--font-ui); font-size: .62rem; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase; padding: .5rem 1rem;
+  cursor: pointer; flex-shrink: 0; transition: opacity .18s;
+}
+.btn-add:hover { opacity: .8; }
+.btn-add.md { background: #5C3317; }
+.btn-add.gf { background: var(--sage); }
+
+/* Filter tabs */
+.ftabs {
+  display: flex; overflow-x: auto; border-bottom: 1px solid var(--silver);
+  scrollbar-width: none; padding: 0 1.25rem;
+}
+.ftabs::-webkit-scrollbar { display: none; }
+.ftab {
+  border: none; background: none; cursor: pointer;
+  font-family: var(--font-ui); font-size: .6rem; font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase; padding: .6rem .9rem;
+  white-space: nowrap; color: var(--fog);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all .18s;
+}
+.ftab.on { color: var(--navy); border-bottom-color: var(--navy); }
+
+/* ═══════════════════════════════════════
+   RECIPE CARDS
+═══════════════════════════════════════ */
+.rec-list { padding: 0 1.25rem; }
+.rcard {
+  display: flex; align-items: center; gap: .85rem;
+  padding: .85rem 0; border-bottom: 1px solid var(--pearl);
+  cursor: pointer; transition: all .15s;
+}
+.rcard:hover { padding-left: .3rem; }
+.rcard-ico {
+  width: 44px; height: 44px; flex-shrink: 0;
+  border: 1px solid var(--silver);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--pearl);
+}
+.rcard-ico svg { width: 22px; height: 22px; stroke: var(--navy2); fill: none; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.rcard-body { flex: 1; min-width: 0; }
+.rcard-cat { font-size: .55rem; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--fog); margin-bottom: .1rem; }
+.rcard-name { font-family: var(--font-display); font-size: 1.05rem; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcard-desc { font-size: .7rem; color: var(--fog); margin-top: .08rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcard-arr svg { width: 12px; height: 12px; stroke: var(--mist); fill: none; stroke-width: 1.5; flex-shrink: 0; }
+
+/* ═══════════════════════════════════════
+   GASTRONOMIA MAP
+═══════════════════════════════════════ */
+.map-toggle {
+  display: flex; padding: .6rem 1.25rem; gap: .5rem;
+  border-bottom: 1px solid var(--silver);
+}
+.map-toggle-btn {
+  flex: 1; border: 1px solid var(--silver); background: transparent;
+  font-family: var(--font-ui); font-size: .62rem; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase; padding: .45rem;
+  cursor: pointer; color: var(--fog); transition: all .18s;
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
+}
+.map-toggle-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+.map-toggle-btn.on { background: var(--navy); border-color: var(--navy); color: var(--white); }
+#mapContainer {
+  height: 260px; border-bottom: 1px solid var(--silver);
+  display: none;
+}
+#mapContainer.on { display: block; }
+.leaflet-container { font-family: var(--font-ui) !important; }
+
+/* Map location cards */
+.loc-list { padding: 0 1.25rem; }
+.loc-card {
+  display: flex; align-items: flex-start; gap: .85rem;
+  padding: .85rem 0; border-bottom: 1px solid var(--pearl);
+}
+.loc-badge {
+  width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .6rem; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.loc-badge.rist { background: #E8F0F8; color: var(--steel); border: 1px solid #B5CCE8; }
+.loc-badge.vino { background: #F2EBE0; color: #8B5E3C; border: 1px solid #D4B896; }
+.loc-badge.merc { background: #E8F2EC; color: var(--sage); border: 1px solid #B5D4BE; }
+.loc-body { flex: 1; min-width: 0; }
+.loc-name { font-family: var(--font-display); font-size: 1rem; line-height: 1.2; }
+.loc-region { font-size: .58rem; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--fog); margin-top: .12rem; }
+.loc-desc { font-size: .75rem; color: var(--fog); margin-top: .15rem; line-height: 1.4; }
+.loc-recipe { font-size: .62rem; color: var(--steel); margin-top: .2rem; }
+
+/* ═══════════════════════════════════════
+   M'È DOLCE — special card
+═══════════════════════════════════════ */
+.md-card {
+  border: 1px solid var(--silver);
+  margin: .6rem 0;
+  background: var(--white);
+  cursor: pointer;
+  transition: all .2s;
+  position: relative; overflow: hidden;
+}
+.md-card:hover { border-color: var(--navy2); box-shadow: var(--shadow-sm); }
+.md-card-top {
+  padding: .9rem 1rem;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+  position: relative; overflow: hidden;
+}
+.md-card-top::after {
+  content: '';
+  position: absolute; right: -20px; top: -20px;
+  width: 80px; height: 80px;
+  border: 1px solid rgba(201,169,110,.2);
+  border-radius: 50%;
+}
+.md-card-sub { font-size: .55rem; font-weight: 500; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); margin-bottom: .3rem; opacity: .8; }
+.md-card-name { font-family: var(--font-display); font-size: 1.15rem; font-style: italic; color: var(--white); line-height: 1.2; }
+.md-card-cit { font-family: var(--font-body); font-style: italic; font-size: .75rem; color: rgba(255,255,255,.55); margin-top: .35rem; line-height: 1.5; }
+.md-card-body { padding: .75rem 1rem; }
+.md-card-desc { font-family: var(--font-body); font-size: .85rem; color: var(--navy2); line-height: 1.5; }
+.md-card-footer { display: flex; align-items: center; gap: .6rem; padding: .6rem 1rem; border-top: 1px solid var(--pearl); }
+.md-music { font-size: .65rem; color: var(--fog); font-style: italic; font-family: var(--font-body); flex: 1; }
+.md-music svg { width: 11px; height: 11px; stroke: var(--gold); fill: none; stroke-width: 1.5; margin-right: .3rem; vertical-align: middle; }
+
+/* QR placeholder */
+.qr-box {
+  width: 36px; height: 36px; flex-shrink: 0;
+  border: 1px solid var(--silver);
+  display: grid; grid-template-columns: repeat(5,1fr); grid-template-rows: repeat(5,1fr);
+  gap: 1px; padding: 4px; background: var(--pearl);
+}
+.qr-box span { background: var(--navy); display: block; }
+.qr-box span:nth-child(n+2):nth-child(-n+4) { background: transparent; }
+
+/* ═══════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════ */
+.empty {
+  text-align: center; padding: 3rem 1.5rem 2rem;
+  border-bottom: 1px solid var(--pearl);
+}
+.empty-mark {
+  width: 60px; height: 60px; border: 1px solid var(--silver);
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 1.2rem;
+}
+.empty-mark svg { width: 28px; height: 28px; stroke: var(--mist); fill: none; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+.empty-t { font-family: var(--font-display); font-size: 1.15rem; font-style: italic; color: var(--navy2); margin-bottom: .35rem; }
+.empty-s { font-size: .75rem; color: var(--fog); line-height: 1.6; max-width: 220px; margin: 0 auto .9rem; }
+.btn-empty {
+  border: 1px solid var(--navy); background: transparent; cursor: pointer;
+  font-family: var(--font-ui); font-size: .65rem; font-weight: 500;
+  letter-spacing: .12em; text-transform: uppercase; padding: .55rem 1.2rem;
+  color: var(--navy); transition: all .18s;
+}
+.btn-empty:hover { background: var(--navy); color: var(--white); }
+
+/* ═══════════════════════════════════════
+   OVERLAY + SHEET
+═══════════════════════════════════════ */
+.ov {
+  position: fixed; inset: 0; background: rgba(12,27,51,.55);
+  z-index: 200; display: none; backdrop-filter: blur(2px);
+  animation: fIn .22s;
+}
+@keyframes fIn { from { opacity: 0; } to { opacity: 1; } }
+.sh {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--white); max-height: 94vh; overflow-y: auto;
+  z-index: 201;
+  transform: translateY(101%);
+  transition: transform .34s cubic-bezier(.32,.72,0,1);
+  max-width: 520px; margin: 0 auto;
+  border-top: 2px solid var(--navy);
+  scrollbar-width: thin; scrollbar-color: var(--silver) transparent;
+}
+.sh.op { transform: translateY(0); }
+.sh-grip { width: 32px; height: 2px; background: var(--mist); margin: .85rem auto .3rem; }
+.sh-hdr {
+  padding: .7rem 1.25rem .9rem;
+  border-bottom: 1px solid var(--pearl);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; background: var(--white); z-index: 1;
+}
+.sh-ttl { font-family: var(--font-display); font-size: 1.15rem; font-style: italic; }
+.sh-cls {
+  width: 28px; height: 28px; border: 1px solid var(--silver);
+  background: none; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; font-size: 13px; color: var(--fog); transition: all .15s;
+}
+.sh-cls:hover { border-color: var(--navy); color: var(--navy); }
+.sh-body { padding: .9rem 1.25rem 2rem; }
+
+/* ═══════════════════════════════════════
+   FORMS
+═══════════════════════════════════════ */
+.fg { margin-bottom: .8rem; }
+.fl {
+  display: block; font-size: .57rem; font-weight: 500;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--fog); margin-bottom: .25rem;
+}
+.fc {
+  width: 100%; border: 1px solid var(--silver); background: var(--white);
+  padding: .48rem .65rem; font-family: var(--font-ui); font-size: .88rem;
+  color: var(--navy); outline: none; transition: border-color .18s;
+  border-radius: 0; -webkit-appearance: none; appearance: none;
+}
+.fc:focus { border-color: var(--navy); }
+.fc.ta { resize: vertical; min-height: 78px; line-height: 1.6; font-family: var(--font-body); }
+.fr2 { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; }
+.fr3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .5rem; }
+.f-sep {
+  font-size: .57rem; font-weight: 500; letter-spacing: .2em; text-transform: uppercase;
+  padding: .75rem 0 .3rem; border-top: 1px solid var(--silver); margin-top: .3rem; color: var(--navy2);
+}
+.btn-save {
+  width: 100%; border: none; background: var(--navy); color: var(--white);
+  font-family: var(--font-ui); font-size: .75rem; font-weight: 500;
+  letter-spacing: .12em; text-transform: uppercase; padding: .8rem;
+  cursor: pointer; margin-top: .85rem; transition: opacity .18s;
+}
+.btn-save:hover { opacity: .85; }
+.btn-save.md { background: #5C3317; }
+.btn-save.gf { background: var(--sage); }
+.btn-del {
+  width: 100%; border: 1px solid #b03030; background: none; color: #b03030;
+  font-family: var(--font-ui); font-size: .7rem; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase; padding: .62rem;
+  cursor: pointer; margin-top: .4rem; transition: all .18s;
+}
+.btn-del:hover { background: #b03030; color: var(--white); }
+
+/* ═══════════════════════════════════════
+   DETAIL SHEET
+═══════════════════════════════════════ */
+.det-hero {
+  background: var(--navy);
+  padding: 1.1rem 1.25rem 1rem;
+  position: relative; overflow: hidden;
+}
+.det-hero::after {
+  content: ''; position: absolute; right: -30px; bottom: -30px;
+  width: 120px; height: 120px; border: 1px solid rgba(255,255,255,.06); border-radius: 50%;
+}
+.det-hero-sub { font-size: .55rem; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin-bottom: .3rem; }
+.det-ttl { font-family: var(--font-display); font-size: 1.7rem; font-weight: 400; font-style: italic; color: var(--white); line-height: 1.1; }
+.det-desc { font-family: var(--font-body); font-style: italic; font-size: .88rem; color: rgba(255,255,255,.6); margin-top: .35rem; line-height: 1.5; }
+.det-cit {
+  font-family: var(--font-body); font-style: italic; font-size: .85rem;
+  color: rgba(255,255,255,.75); border-left: 2px solid var(--gold);
+  padding-left: .75rem; margin-top: .6rem; line-height: 1.6;
+}
+.det-music {
+  background: rgba(201,169,110,.12); border: 1px solid rgba(201,169,110,.2);
+  padding: .5rem .75rem; margin: .5rem 1.25rem;
+  display: flex; align-items: center; gap: .6rem;
+  font-family: var(--font-body); font-style: italic; font-size: .82rem; color: var(--navy2);
+}
+.det-music svg { width: 14px; height: 14px; stroke: var(--gold); fill: none; stroke-width: 1.5; flex-shrink: 0; }
+.det-body { padding: .8rem 1.25rem 1rem; }
+.det-sec-lbl {
+  font-size: .55rem; font-weight: 500; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--fog); padding: .6rem 0 .3rem;
+  border-top: 1px solid var(--silver); margin-top: .4rem;
+}
+.det-ing-list { list-style: none; }
+.det-ing-li {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: .38rem 0; border-bottom: 1px solid var(--pearl);
+  font-family: var(--font-body); font-size: .94rem;
+}
+.det-ing-li:last-child { border-bottom: none; }
+.det-ing-qty { font-size: .78rem; color: var(--fog); text-align: right; white-space: nowrap; margin-left: .5rem; }
+.det-step { display: flex; gap: .75rem; padding: .5rem 0; border-bottom: 1px solid var(--pearl); }
+.det-step:last-child { border-bottom: none; }
+.det-step-n {
+  font-family: var(--font-display); font-size: 1.1rem; font-weight: 400;
+  color: var(--mist); min-width: 18px; line-height: 1.3; flex-shrink: 0;
+}
+.det-step-t { font-family: var(--font-body); font-size: .93rem; line-height: 1.7; color: var(--navy2); }
+.det-note {
+  font-family: var(--font-body); font-style: italic; font-size: .9rem;
+  color: var(--fog); line-height: 1.65; padding: .7rem .9rem;
+  border-left: 2px solid var(--silver); background: var(--pearl); margin: .3rem 0;
+}
+.det-tag-row { display: flex; flex-wrap: wrap; gap: .35rem; margin: .3rem 0; }
+.det-tag {
+  font-size: .58rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+  border: 1px solid var(--silver); padding: .18rem .55rem; color: var(--fog);
+}
+.det-acts {
+  display: grid; grid-template-columns: 1fr 1fr; gap: .5rem;
+  margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--silver);
+}
+.det-btn {
+  border: 1px solid var(--silver); background: transparent; cursor: pointer;
+  font-family: var(--font-ui); font-size: .65rem; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase; padding: .62rem; color: var(--navy2);
+  transition: all .18s;
+}
+.det-btn:hover { background: var(--navy); color: var(--white); border-color: var(--navy); }
+.det-btn.danger:hover { background: #b03030; border-color: #b03030; }
+
+/* ═══════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════ */
+.set-row { padding: .85rem 0; border-bottom: 1px solid var(--pearl); }
+.set-lbl { font-size: .85rem; font-weight: 500; color: var(--navy); }
+.set-sub { font-size: .68rem; color: var(--fog); margin-top: .1rem; line-height: 1.45; }
+.set-input {
+  width: 100%; border: 1px solid var(--silver); padding: .48rem .65rem;
+  font-size: .82rem; font-family: var(--font-ui); outline: none; margin-top: .45rem;
+  border-radius: 0; background: var(--white); color: var(--navy);
+}
+.set-input:focus { border-color: var(--navy); }
+.status-row { display: flex; align-items: center; gap: .6rem; margin-top: .45rem; }
+.sdot { width: 7px; height: 7px; border-radius: 50%; background: var(--silver); flex-shrink: 0; }
+.sdot.ok { background: var(--sage); } .sdot.err { background: #b03030; }
+.set-stat { font-size: .68rem; color: var(--fog); }
+.set-sep {
+  font-size: .57rem; font-weight: 500; letter-spacing: .2em; text-transform: uppercase;
+  padding: .85rem 0 .45rem; margin-top: .4rem; border-top: 1px solid var(--silver); color: var(--navy2);
+}
+.set-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; margin-top: .45rem; }
+.btn-tool {
+  border: 1px solid var(--silver); background: transparent;
+  font-family: var(--font-ui); font-size: .67rem; font-weight: 500;
+  letter-spacing: .08em; text-transform: uppercase; padding: .58rem; cursor: pointer;
+  color: var(--navy2); transition: all .18s;
+}
+.btn-tool:hover { border-color: var(--navy); background: var(--navy); color: var(--white); }
+.btn-mig {
+  border: 1px solid var(--navy2); background: var(--pearl); color: var(--navy2);
+  width: 100%; font-family: var(--font-ui); font-size: .7rem; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase; padding: .62rem; cursor: pointer;
+  margin-top: .4rem; transition: all .18s;
+}
+.btn-mig:hover { background: var(--navy); color: var(--white); border-color: var(--navy); }
+.set-guide { font-size: .73rem; line-height: 1.78; color: var(--fog); margin-top: .5rem; }
+.set-guide a { color: var(--steel); }
+.set-guide code { background: var(--pearl); padding: .05rem .3rem; font-size: .7rem; }
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+#toast {
+  position: fixed; bottom: calc(var(--nav-h) + 12px); left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--navy); color: var(--white);
+  padding: .5rem 1.1rem; font-size: .73rem; font-weight: 500; letter-spacing: .04em;
+  opacity: 0; pointer-events: none; transition: all .25s; z-index: 400;
+  white-space: nowrap; max-width: 88vw; text-align: center;
+  border-left: 2px solid var(--steel);
+}
+#toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════
+   LOADER
+═══════════════════════════════════════ */
+.spin { width: 18px; height: 18px; border: 1.5px solid var(--silver); border-top-color: var(--navy); border-radius: 50%; animation: rot .7s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE TWEAKS
+═══════════════════════════════════════ */
+@media (min-width: 420px) {
+  .home-hl { font-size: 2.5rem; }
+}
 </style>
 </head>
 <body>
 <div id="app">
 
 <!-- HEADER -->
-<div class="hdr">
-  <div>
-    <div class="hdr-logo">Atelier <em>Straccini</em></div>
-    <div class="hdr-sub" id="hdrSub">Hub Gastronomico · Marche</div>
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-wordmark">Atelier <em>Straccini</em></div>
+    <div class="hdr-tagline" id="hdrTag">Hub Gastronomico · Marche</div>
   </div>
   <div class="hdr-acts">
-    <button class="hbtn" id="srchBtn" onclick="toggleSearch()" title="Cerca">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <button class="hdr-btn" id="srchBtn" onclick="toggleSearch()">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.5-4.5"/></svg>
     </button>
-    <button class="hbtn" onclick="openSh('set')" title="Impostazioni">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <button class="hdr-btn" onclick="openSh('set')">
+      <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
   </div>
-</div>
+</header>
 
-<!-- SEARCH BAR -->
+<!-- SEARCH -->
 <div class="srchbar" id="srchBar">
-  <div class="srch-inner">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input id="srchInput" type="text" placeholder="Cerca in tutte le sezioni..." oninput="doSearch()" autocomplete="off">
-    <button onclick="clearSearch()" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:13px;padding:4px">✕</button>
+  <div class="srch-row">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.5-4.5"/></svg>
+    <input id="srchIn" type="text" placeholder="Cerca ricette, luoghi, produttori…" oninput="doSearch()" autocomplete="off">
+    <button onclick="clearSearch()" style="border:none;background:none;cursor:pointer;color:var(--fog);font-size:13px;padding:2px 4px">✕</button>
   </div>
-  <div class="srch-results" id="srchResults"></div>
+  <div class="srch-results" id="srchRes"></div>
 </div>
 
-<!-- HOME -->
+<!-- ══ HOME ══ -->
 <div class="view on" id="vHome">
-  <div class="home-hero">
+  <div class="home-masthead">
     <div class="home-date" id="homeDate"></div>
-    <div class="home-title">Atelier <em>Straccini</em><br><strong>Gastronomia & Dolcezza</strong></div>
-    <div class="home-tagline">Cucina · Cioccolato · Poesia — Marche</div>
+    <h1 class="home-hl">Atelier<br><em>Straccini</em></h1>
+    <div class="home-sub">Cucina · Cioccolato · Territorio — Italia Centrale</div>
   </div>
-  <div class="sec-cards">
-    <button class="sec-card" onclick="goView('md')">
-      <div class="sc-stripe" style="background:var(--md-gold)"></div>
-      <div class="sc-ico">🍫</div>
+  <div class="sec-nav">
+    <button class="sec-card md" onclick="goView('md')">
+      <div class="sc-ico-wrap">
+        <!-- Ink icon: cacao pod / chocolate -->
+        <svg viewBox="0 0 24 24"><path d="M12 3c-2 0-5 2-5 6s2 8 5 10c3-2 5-6 5-10s-3-6-5-6z"/><path d="M12 3v16"/><path d="M7 9h10"/><path d="M8 13h8"/></svg>
+      </div>
       <div class="sc-body">
-        <div class="sc-title">M'è dolce <span style="font-size:.6rem;background:var(--md-dk);color:var(--md-gold);padding:.15rem .45rem;font-style:normal;font-family:'Jost',sans-serif;letter-spacing:.06em;font-weight:600;margin-left:.3rem">RECANATI</span></div>
-        <div class="sc-desc">Cioccolateria sinestetica · Praline, micro pasticceria e poetica leopardiana</div>
+        <div class="sc-name">M'è dolce</div>
+        <div class="sc-desc">Cioccolateria sinestetica · Poetica leopardiana · Recanati</div>
         <div class="sc-cnt md" id="cntMd">0 ricette</div>
       </div>
-      <span style="color:#ccc">›</span>
+      <div class="sc-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
     </button>
-    <button class="sec-card" onclick="goView('gf')">
-      <div class="sc-stripe" style="background:var(--gf-acc)"></div>
-      <div class="sc-ico">🌿</div>
+    <button class="sec-card gf" onclick="goView('gf')">
+      <div class="sc-ico-wrap">
+        <!-- Ink icon: knife & fork -->
+        <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.7 1.3 3 3 3s3-1.3 3-3V2"/><line x1="6" y1="2" x2="6" y2="22"/><path d="M18 2c0 0-4 2-4 8s4 4 4 4v8"/></svg>
+      </div>
       <div class="sc-body">
-        <div class="sc-title">Gastronomia di Frontiera</div>
-        <div class="sc-desc">Tradizione marchigiana d'avanguardia · Tecnica, territorio e innovazione</div>
+        <div class="sc-name">Gastronomia di Frontiera</div>
+        <div class="sc-desc">Tradizione d'avanguardia · Marche, Umbria, Abruzzo e oltre</div>
         <div class="sc-cnt gf" id="cntGf">0 ricette</div>
       </div>
-      <span style="color:#ccc">›</span>
+      <div class="sc-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
     </button>
-    <button class="sec-card" onclick="goView('rc')">
-      <div class="sc-stripe" style="background:var(--ink2)"></div>
-      <div class="sc-ico">📖</div>
+    <button class="sec-card rc" onclick="goView('rc')">
+      <div class="sc-ico-wrap">
+        <!-- Ink icon: open book -->
+        <svg viewBox="0 0 24 24"><path d="M2 4h9v16H2z"/><path d="M13 4h9v16h-9z"/><line x1="11" y1="4" x2="13" y2="4"/><line x1="11" y1="20" x2="13" y2="20"/><line x1="5" y1="8" x2="9" y2="8"/><line x1="5" y1="12" x2="9" y2="12"/><line x1="15" y1="8" x2="19" y2="8"/><line x1="15" y1="12" x2="19" y2="12"/></svg>
+      </div>
       <div class="sc-body">
-        <div class="sc-title">Il Ricettario</div>
-        <div class="sc-desc">Archivio di famiglia · Ricette tradizionali e di ricerca personale</div>
+        <div class="sc-name">Il Ricettario</div>
+        <div class="sc-desc">Archivio di famiglia · Tradizione, tecnica, memoria</div>
         <div class="sc-cnt rc" id="cntRc">0 ricette</div>
       </div>
-      <span style="color:#ccc">›</span>
+      <div class="sc-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
     </button>
   </div>
-  <div class="news-bar">
-    <div class="news-bar-t">Note & Aggiornamenti</div>
-    <button class="btn-ghost-sm" onclick="openSh('news')">+ Aggiungi</button>
+  <div class="feed-hdr">
+    <div class="feed-lbl">Note & Aggiornamenti</div>
+    <button class="btn-xs" onclick="openSh('news')">+ Aggiungi</button>
   </div>
   <div id="newsFeed"></div>
 </div>
 
-<!-- M'E DOLCE -->
+<!-- ══ M'È DOLCE ══ -->
 <div class="view" id="vMd">
-  <div class="sec-hdr">
-    <div class="sec-hdr-l">
+  <div class="sec-top">
+    <div class="sec-top-l">
       <div class="sec-ttl">M'è dolce</div>
       <div class="sec-sub">Cioccolateria & Micro Pasticceria · Recanati</div>
     </div>
     <button class="btn-add md" onclick="openAddMd()">+ Ricetta</button>
   </div>
-  <div class="filter-tabs" id="tabsMd">
+  <div class="ftabs" id="tabsMd">
     <button class="ftab on" onclick="filtTab('md','all',this)">Tutte</button>
-    <button class="ftab" onclick="filtTab('md','A',this)">🍫 Cioccolatini</button>
-    <button class="ftab" onclick="filtTab('md','B',this)">🎂 Pasticceria</button>
-    <button class="ftab" onclick="filtTab('md','C',this)">🌿 Elementi</button>
+    <button class="ftab" onclick="filtTab('md','A',this)">Cioccolatini</button>
+    <button class="ftab" onclick="filtTab('md','B',this)">Pasticceria</button>
+    <button class="ftab" onclick="filtTab('md','C',this)">Elementi</button>
   </div>
-  <div class="rec-list" id="listMd"></div>
+  <div style="padding:.6rem 1.25rem 0"><div id="listMd"></div></div>
 </div>
 
-<!-- GASTRONOMIA -->
+<!-- ══ GASTRONOMIA ══ -->
 <div class="view" id="vGf">
-  <div class="sec-hdr">
-    <div class="sec-hdr-l">
+  <div class="sec-top">
+    <div class="sec-top-l">
       <div class="sec-ttl">Gastronomia di Frontiera</div>
-      <div class="sec-sub">Tradizione d'Avanguardia · Marche</div>
+      <div class="sec-sub">Tradizione d'Avanguardia · Italia Centrale</div>
     </div>
     <button class="btn-add gf" onclick="openAddGf()">+ Ricetta</button>
   </div>
-  <div class="filter-tabs" id="tabsGf">
-    <button class="ftab on" onclick="filtTab('gf','all',this)">Tutte</button>
-    <button class="ftab" onclick="filtTab('gf','T',this)">🏛 Tradizione</button>
-    <button class="ftab" onclick="filtTab('gf','I',this)">⚗️ Innovazione</button>
-    <button class="ftab" onclick="filtTab('gf','M',this)">🌾 Territorio</button>
-    <button class="ftab" onclick="filtTab('gf','S',this)">🍂 Stagionale</button>
+  <!-- View toggle: lista / mappa -->
+  <div class="map-toggle">
+    <button class="map-toggle-btn on" id="btnLista" onclick="setGfView('lista')">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Lista ricette
+    </button>
+    <button class="map-toggle-btn" id="btnMappa" onclick="setGfView('mappa')">
+      <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      Mappa territori
+    </button>
+    <button class="map-toggle-btn" id="btnLuoghi" onclick="setGfView('luoghi')">
+      <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      Luoghi
+    </button>
   </div>
-  <div class="rec-list" id="listGf"></div>
+  <div class="ftabs" id="tabsGf" style="display:none">
+    <button class="ftab on" onclick="filtTab('gf','all',this)">Tutte</button>
+    <button class="ftab" onclick="filtTab('gf','T',this)">Tradizione</button>
+    <button class="ftab" onclick="filtTab('gf','I',this)">Innovazione</button>
+    <button class="ftab" onclick="filtTab('gf','M',this)">Territorio</button>
+    <button class="ftab" onclick="filtTab('gf','S',this)">Stagionale</button>
+  </div>
+  <!-- Map -->
+  <div id="mapContainer"></div>
+  <!-- Map legend -->
+  <div id="mapLegend" style="display:none;padding:.5rem 1.25rem;border-bottom:1px solid var(--silver);gap:.8rem;flex-wrap:wrap">
+    <span style="font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--fog)">Legenda:</span>
+    <span class="loc-badge rist" style="padding:.1rem .5rem;font-size:.58rem">Rist.</span>
+    <span class="loc-badge vino" style="padding:.1rem .5rem;font-size:.58rem">Vino</span>
+    <span class="loc-badge merc" style="padding:.1rem .5rem;font-size:.58rem">Mercato</span>
+  </div>
+  <!-- Lista ricette -->
+  <div id="gfListaView">
+    <div class="ftabs" id="tabsGfInner">
+      <button class="ftab on" onclick="filtTab('gf','all',this)">Tutte</button>
+      <button class="ftab" onclick="filtTab('gf','T',this)">Tradizione</button>
+      <button class="ftab" onclick="filtTab('gf','I',this)">Innovazione</button>
+      <button class="ftab" onclick="filtTab('gf','M',this)">Territorio</button>
+      <button class="ftab" onclick="filtTab('gf','S',this)">Stagionale</button>
+    </div>
+    <div class="rec-list" id="listGf"></div>
+  </div>
+  <!-- Luoghi -->
+  <div id="gfLuoghiView" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 1.25rem .4rem;border-bottom:1px solid var(--silver)">
+      <div style="font-size:.58rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--fog)">Ristoranti, Vini, Mercati</div>
+      <button class="btn-xs" onclick="openSh('luogo')">+ Aggiungi luogo</button>
+    </div>
+    <div style="display:flex;gap:.4rem;padding:.5rem 1.25rem;border-bottom:1px solid var(--silver)">
+      <button class="map-toggle-btn on" id="filtLuogoAll" onclick="filtLuoghi('all',this)" style="flex:none;padding:.3rem .7rem;font-size:.57rem">Tutti</button>
+      <button class="map-toggle-btn" id="filtLuogoRist" onclick="filtLuoghi('rist',this)" style="flex:none;padding:.3rem .7rem;font-size:.57rem">Ristoranti</button>
+      <button class="map-toggle-btn" id="filtLuogoVino" onclick="filtLuoghi('vino',this)" style="flex:none;padding:.3rem .7rem;font-size:.57rem">Vini</button>
+      <button class="map-toggle-btn" id="filtLuogoMerc" onclick="filtLuoghi('merc',this)" style="flex:none;padding:.3rem .7rem;font-size:.57rem">Mercati</button>
+    </div>
+    <div class="loc-list" id="listLuoghi"></div>
+  </div>
 </div>
 
-<!-- RICETTARIO -->
+<!-- ══ RICETTARIO ══ -->
 <div class="view" id="vRc">
-  <div class="sec-hdr">
-    <div class="sec-hdr-l">
+  <div class="sec-top">
+    <div class="sec-top-l">
       <div class="sec-ttl">Il Ricettario</div>
       <div class="sec-sub">Archivio di Famiglia</div>
     </div>
     <button class="btn-add" onclick="openAddRc()">+ Ricetta</button>
   </div>
-  <div class="filter-tabs" id="tabsRc">
+  <div class="ftabs" id="tabsRc">
     <button class="ftab on" onclick="filtTab('rc','all',this)">Tutte</button>
     <button class="ftab" onclick="filtTab('rc','🍝 Primi',this)">Primi</button>
     <button class="ftab" onclick="filtTab('rc','🥩 Secondi',this)">Secondi</button>
@@ -330,19 +854,31 @@ body{background:#fff;color:#0e0e0e;font-family:'Jost',sans-serif;font-weight:400
 
 <!-- BOTTOM NAV -->
 <nav class="bnav">
-  <button class="bni on" id="bnHome" onclick="goView('home')"><span class="bni-ico">🏠</span><span>Home</span></button>
-  <button class="bni md" id="bnMd" onclick="goView('md')"><span class="bni-ico">🍫</span><span>M'è dolce</span></button>
-  <button class="bni gf" id="bnGf" onclick="goView('gf')"><span class="bni-ico">🌿</span><span>Gastronomia</span></button>
-  <button class="bni" id="bnRc" onclick="goView('rc')"><span class="bni-ico">📖</span><span>Ricettario</span></button>
+  <button class="bni on" id="bnHome" onclick="goView('home')">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </button>
+  <button class="bni" id="bnMd" onclick="goView('md')">
+    <svg viewBox="0 0 24 24"><path d="M12 3c-2 0-5 2-5 6s2 8 5 10c3-2 5-6 5-10s-3-6-5-6z"/><path d="M12 3v16"/><path d="M7 9h10"/></svg>
+    M'è dolce
+  </button>
+  <button class="bni" id="bnGf" onclick="goView('gf')">
+    <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.7 1.3 3 3 3s3-1.3 3-3V2"/><line x1="6" y1="2" x2="6" y2="22"/><path d="M18 2c0 0-4 2-4 8s4 4 4 4v8"/></svg>
+    Gastronomia
+  </button>
+  <button class="bni" id="bnRc" onclick="goView('rc')">
+    <svg viewBox="0 0 24 24"><path d="M2 4h9v16H2z"/><path d="M13 4h9v16h-9z"/><line x1="5" y1="8" x2="9" y2="8"/><line x1="5" y1="12" x2="9" y2="12"/></svg>
+    Ricettario
+  </button>
 </nav>
 </div><!-- /app -->
 
-<!-- ══════════════ SHEETS ══════════════ -->
+<!-- ══════════ SHEETS ══════════ -->
 
 <!-- M'E DOLCE FORM -->
 <div class="ov" id="mdOv" onclick="closeSh('md')"></div>
 <div class="sh" id="mdSh">
-  <div class="sh-drag"></div>
+  <div class="sh-grip"></div>
   <div class="sh-hdr"><span class="sh-ttl" id="mdShTtl">Nuova Ricetta M'è dolce</span><button class="sh-cls" onclick="closeSh('md')">✕</button></div>
   <div class="sh-body">
     <input type="hidden" id="md_id">
@@ -362,17 +898,18 @@ body{background:#fff;color:#0e0e0e;font-family:'Jost',sans-serif;font-weight:400
       <div class="fg"><label class="fl">Sottocategoria</label><select id="md_sub" class="fc"><option value="">—</option></select></div>
     </div>
     <div class="fg"><label class="fl">Descrizione sensoriale</label><input id="md_desc" class="fc" type="text" placeholder="Profilo olfattivo e gustativo"></div>
-    <div class="f-sep">⚗️ Ingredienti — formato: Nome | Peso g | %</div>
-    <div class="fg"><textarea id="md_ings" class="fc ta" placeholder="Cioccolato fondente 70% Valrhona | 300 | 60&#10;Panna fresca 35% | 120 | 24&#10;Burro di cacao | 30 | 6"></textarea></div>
-    <div class="f-sep">📋 Procedimento (una fase per riga)</div>
+    <div class="f-sep">Ingredienti — formato: Nome | Peso g | %</div>
+    <div class="fg"><textarea id="md_ings" class="fc ta" placeholder="Cioccolato fondente 70% | 300 | 60&#10;Panna fresca 35% | 120 | 24"></textarea></div>
+    <div class="f-sep">Procedimento (una fase per riga)</div>
     <div class="fg"><textarea id="md_proc" class="fc ta" placeholder="Temperare il fondente a 31–32°C...&#10;Scaldare panna a 85°C..."></textarea></div>
-    <div class="f-sep">🎵 Note & Poetica Leopardiana</div>
-    <div class="fg"><label class="fl">Note tecniche</label><textarea id="md_note" class="fc ta" style="min-height:60px" placeholder="Temperature, shelf life, Aw target..."></textarea></div>
+    <div class="f-sep">Note & Poetica Leopardiana</div>
+    <div class="fg"><label class="fl">Note tecniche</label><textarea id="md_note" class="fc ta" style="min-height:58px" placeholder="Temperature, shelf life, Aw target..."></textarea></div>
     <div class="fr2">
-      <div class="fg"><label class="fl">Abbinamento vino / tè</label><input id="md_abbi" class="fc" type="text" placeholder="Passito · Lapsang Souchong"></div>
-      <div class="fg"><label class="fl">🎵 Musica QR</label><input id="md_music" class="fc" type="text" placeholder="Notturno — Chopin"></div>
+      <div class="fg"><label class="fl">Abbinamento vino / tè</label><input id="md_abbi" class="fc" type="text" placeholder="Passito · Lapsang"></div>
+      <div class="fg"><label class="fl">Musica QR</label><input id="md_music" class="fc" type="text" placeholder="Notturno — Chopin"></div>
     </div>
-    <div class="fg"><label class="fl">Citazione leopardiana</label><textarea id="md_cit" class="fc ta" style="min-height:50px" placeholder="«...» — G. Leopardi, Opera (anno)"></textarea></div>
+    <div class="fg"><label class="fl">URL audio / video (QR)</label><input id="md_url" class="fc" type="url" placeholder="https://youtube.com/..."></div>
+    <div class="fg"><label class="fl">Citazione leopardiana</label><textarea id="md_cit" class="fc ta" style="min-height:48px" placeholder="«...» — G. Leopardi, Opera (anno)"></textarea></div>
     <div class="fg"><label class="fl">Fonte / Autore</label><input id="md_fonte" class="fc" type="text" placeholder="Massari, Di Carlo, elaborazione propria..."></div>
     <button class="btn-save md" onclick="saveMd()">Archivia Ricetta</button>
     <button class="btn-del" id="md_delBtn" style="display:none" onclick="delMd()">Elimina ricetta</button>
@@ -382,7 +919,7 @@ body{background:#fff;color:#0e0e0e;font-family:'Jost',sans-serif;font-weight:400
 <!-- GASTRONOMIA FORM -->
 <div class="ov" id="gfOv" onclick="closeSh('gf')"></div>
 <div class="sh" id="gfSh">
-  <div class="sh-drag"></div>
+  <div class="sh-grip"></div>
   <div class="sh-hdr"><span class="sh-ttl" id="gfShTtl">Nuova Ricetta</span><button class="sh-cls" onclick="closeSh('gf')">✕</button></div>
   <div class="sh-body">
     <input type="hidden" id="gf_id">
@@ -397,10 +934,12 @@ body{background:#fff;color:#0e0e0e;font-family:'Jost',sans-serif;font-weight:400
           <option value="S">S · Stagionale</option>
         </select>
       </div>
-      <div class="fg"><label class="fl">Stagione</label>
-        <select id="gf_stag" class="fc">
-          <option value="">—</option><option>Primavera</option><option>Estate</option>
-          <option>Autunno</option><option>Inverno</option><option>Tutto l'anno</option>
+      <div class="fg"><label class="fl">Regione</label>
+        <select id="gf_reg" class="fc">
+          <option value="">—</option>
+          <option>Marche</option><option>Umbria</option><option>Abruzzo</option>
+          <option>Lazio</option><option>Toscana</option><option>Emilia-Romagna</option>
+          <option>Altra regione</option>
         </select>
       </div>
     </div>
@@ -409,33 +948,74 @@ body{background:#fff;color:#0e0e0e;font-family:'Jost',sans-serif;font-weight:400
         <select id="gf_tec" class="fc">
           <option value="">—</option><option>Tradizionale</option><option>Sous-vide</option>
           <option>Fermentazione</option><option>Affumicatura</option><option>Essiccatura</option>
-          <option>Sferificazione</option><option>Bassa temperatura</option><option>Crudo</option>
+          <option>Bassa temperatura</option><option>Crudo</option>
         </select>
       </div>
-      <div class="fg"><label class="fl">Difficoltà</label>
-        <select id="gf_dif" class="fc"><option>Ricerca</option><option>Avanzata</option><option>Media</option><option>Base</option></select>
+      <div class="fg"><label class="fl">Stagione</label>
+        <select id="gf_stag" class="fc">
+          <option value="">—</option><option>Primavera</option><option>Estate</option>
+          <option>Autunno</option><option>Inverno</option><option>Tutto l'anno</option>
+        </select>
       </div>
     </div>
     <div class="fg"><label class="fl">Descrizione / Filosofia</label><input id="gf_desc" class="fc" type="text" placeholder="Territorio, ispirazione, note sensoriali"></div>
     <div class="fg"><label class="fl">Ingredienti (uno per riga)</label><textarea id="gf_ings" class="fc ta" placeholder="300g farro monococco IGP Marche&#10;200g guanciale Mora Romagnola"></textarea></div>
-    <div class="f-sep">📋 Procedimento (una fase per riga)</div>
-    <div class="fg"><textarea id="gf_proc" class="fc ta" placeholder="Ammollare il farro 12h...&#10;Soffriggere il guanciale..."></textarea></div>
-    <div class="f-sep">📝 Note, Abbinamenti & Territorio</div>
-    <div class="fg"><label class="fl">Note tecniche e parametri</label><textarea id="gf_note" class="fc ta" style="min-height:58px" placeholder="Temperatura, tempi, attrezzature..."></textarea></div>
+    <div class="f-sep">Procedimento (una fase per riga)</div>
+    <div class="fg"><textarea id="gf_proc" class="fc ta" placeholder="Ammollare il farro 12h..."></textarea></div>
+    <div class="f-sep">Note, Abbinamenti & Luoghi collegati</div>
+    <div class="fg"><label class="fl">Note tecniche</label><textarea id="gf_note" class="fc ta" style="min-height:55px" placeholder="Temperatura, tempi, attrezzature..."></textarea></div>
     <div class="fr2">
       <div class="fg"><label class="fl">Abbinamento vino</label><input id="gf_abbi" class="fc" type="text" placeholder="es. Verdicchio Castelli di Jesi DOC"></div>
-      <div class="fg"><label class="fl">Ispirazione / territorio</label><input id="gf_insp" class="fc" type="text" placeholder="es. Cucina contadina Sibillini"></div>
+      <div class="fg"><label class="fl">Produttore / Cantina</label><input id="gf_prod" class="fc" type="text" placeholder="es. Umani Ronchi, Colonnara"></div>
     </div>
-    <div class="fg"><label class="fl">Fonte / Ricerca</label><input id="gf_fonte" class="fc" type="text" placeholder="es. Famiglia, ricerca personale, territorio"></div>
+    <div class="fg"><label class="fl">Ristorante / Luogo ispirazione</label><input id="gf_rist" class="fc" type="text" placeholder="es. Osteria dei Fiori, Civitanova"></div>
+    <div class="fg"><label class="fl">Ispirazione / Fonte</label><input id="gf_fonte" class="fc" type="text" placeholder="es. Cucina contadina Sibillini, famiglia"></div>
     <button class="btn-save gf" onclick="saveGf()">Archivia Ricetta</button>
     <button class="btn-del" id="gf_delBtn" style="display:none" onclick="delGf()">Elimina ricetta</button>
+  </div>
+</div>
+
+<!-- LUOGO FORM -->
+<div class="ov" id="luogoOv" onclick="closeSh('luogo')"></div>
+<div class="sh" id="luogoSh">
+  <div class="sh-grip"></div>
+  <div class="sh-hdr"><span class="sh-ttl" id="luogoShTtl">Aggiungi Luogo</span><button class="sh-cls" onclick="closeSh('luogo')">✕</button></div>
+  <div class="sh-body">
+    <input type="hidden" id="lu_id">
+    <div class="fg"><label class="fl">Nome *</label><input id="lu_nome" class="fc" type="text" placeholder="es. Osteria del Cuoco, Tenuta Colonnara"></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Tipo *</label>
+        <select id="lu_tipo" class="fc">
+          <option value="rist">Ristorante / Osteria</option>
+          <option value="vino">Cantina / Produttore vino</option>
+          <option value="merc">Mercato / Fornitore</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Regione *</label>
+        <select id="lu_reg" class="fc">
+          <option>Marche</option><option>Umbria</option><option>Abruzzo</option>
+          <option>Lazio</option><option>Toscana</option><option>Emilia-Romagna</option>
+          <option>Altra</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Città / Comune</label><input id="lu_citta" class="fc" type="text" placeholder="es. Ancona, Perugia, Pescara"></div>
+    <div class="fg"><label class="fl">Descrizione</label><textarea id="lu_desc" class="fc ta" style="min-height:60px" placeholder="Specialità, note, perché è interessante..."></textarea></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Latitudine</label><input id="lu_lat" class="fc" type="number" step="0.0001" placeholder="es. 43.6158"></div>
+      <div class="fg"><label class="fl">Longitudine</label><input id="lu_lng" class="fc" type="number" step="0.0001" placeholder="es. 13.5189"></div>
+    </div>
+    <div class="fg"><label class="fl">Ricetta collegata</label><input id="lu_ricetta" class="fc" type="text" placeholder="Nome della ricetta associata"></div>
+    <div class="fg"><label class="fl">Sito web</label><input id="lu_web" class="fc" type="url" placeholder="https://..."></div>
+    <button class="btn-save gf" onclick="saveLuogo()">Salva Luogo</button>
+    <button class="btn-del" id="lu_delBtn" style="display:none" onclick="delLuogo()">Elimina luogo</button>
   </div>
 </div>
 
 <!-- RICETTARIO FORM -->
 <div class="ov" id="rcOv" onclick="closeSh('rc')"></div>
 <div class="sh" id="rcSh">
-  <div class="sh-drag"></div>
+  <div class="sh-grip"></div>
   <div class="sh-hdr"><span class="sh-ttl" id="rcShTtl">Nuova Ricetta</span><button class="sh-cls" onclick="closeSh('rc')">✕</button></div>
   <div class="sh-body">
     <input type="hidden" id="rc_id">
@@ -459,8 +1039,8 @@ body{background:#fff;color:#0e0e0e;font-family:'Jost',sans-serif;font-weight:400
       <div class="fg"><label class="fl">Porzioni</label><input id="rc_srv" class="fc" type="number" value="4" min="1"></div>
     </div>
     <div class="fg"><label class="fl">Ingredienti (uno per riga)</label><textarea id="rc_ings" class="fc ta" placeholder="300g farina 00&#10;2 uova fresche"></textarea></div>
-    <div class="fg"><label class="fl">Procedimento (una fase per riga)</label><textarea id="rc_proc" class="fc ta" placeholder="Setacciare la farina...&#10;Formare un incavo..."></textarea></div>
-    <div class="fg"><label class="fl">Note</label><textarea id="rc_note" class="fc ta" style="min-height:55px" placeholder="Consigli, varianti, conservazione..."></textarea></div>
+    <div class="fg"><label class="fl">Procedimento (una fase per riga)</label><textarea id="rc_proc" class="fc ta" placeholder="Setacciare la farina..."></textarea></div>
+    <div class="fg"><label class="fl">Note</label><textarea id="rc_note" class="fc ta" style="min-height:52px" placeholder="Consigli, varianti, conservazione..."></textarea></div>
     <div class="fg"><label class="fl">Tag (separati da virgola)</label><input id="rc_tags" class="fc" type="text" placeholder="marchigiana, tradizione, forno"></div>
     <div class="fg"><label class="fl">Fonte / URL</label><input id="rc_src" class="fc" type="text" placeholder="Nonna Maria · https://..."></div>
     <button class="btn-save" onclick="saveRc()">Archivia Ricetta</button>
@@ -471,21 +1051,18 @@ body{background:#fff;color:#0e0e0e;font-family:'Jost',sans-serif;font-weight:400
 <!-- NEWS FORM -->
 <div class="ov" id="newsOv" onclick="closeSh('news')"></div>
 <div class="sh" id="newsSh">
-  <div class="sh-drag"></div>
-  <div class="sh-hdr"><span class="sh-ttl">Nuova Nota / Articolo</span><button class="sh-cls" onclick="closeSh('news')">✕</button></div>
+  <div class="sh-grip"></div>
+  <div class="sh-hdr"><span class="sh-ttl">Nota / Articolo</span><button class="sh-cls" onclick="closeSh('news')">✕</button></div>
   <div class="sh-body">
     <div class="fg"><label class="fl">Titolo *</label><input id="nw_tit" class="fc" type="text" placeholder="Titolo della nota o articolo"></div>
     <div class="fr2">
       <div class="fg"><label class="fl">Categoria</label>
-        <select id="nw_cat" class="fc">
-          <option>Notizia</option><option>Tecnica</option><option>Ispirazione</option>
-          <option>Agenda</option><option>Territorio</option><option>Ricerca</option>
-        </select>
+        <select id="nw_cat" class="fc"><option>Notizia</option><option>Tecnica</option><option>Ispirazione</option><option>Agenda</option><option>Territorio</option><option>Ricerca</option></select>
       </div>
       <div class="fg"><label class="fl">Fonte</label><input id="nw_fonte" class="fc" type="text" placeholder="es. Gambero Rosso"></div>
     </div>
-    <div class="fg"><label class="fl">Testo</label><textarea id="nw_txt" class="fc ta" style="min-height:120px" placeholder="Contenuto della nota o dell'articolo..."></textarea></div>
-    <div class="fg"><label class="fl">Link (opzionale)</label><input id="nw_url" class="fc" type="url" placeholder="https://..."></div>
+    <div class="fg"><label class="fl">Testo</label><textarea id="nw_txt" class="fc ta" style="min-height:110px" placeholder="Contenuto..."></textarea></div>
+    <div class="fg"><label class="fl">Link</label><input id="nw_url" class="fc" type="url" placeholder="https://..."></div>
     <button class="btn-save" onclick="saveNews()">Pubblica</button>
   </div>
 </div>
@@ -493,28 +1070,28 @@ body{background:#fff;color:#0e0e0e;font-family:'Jost',sans-serif;font-weight:400
 <!-- DETAIL SHEET -->
 <div class="ov" id="detOv" onclick="closeSh('det')"></div>
 <div class="sh" id="detSh" style="max-height:96vh">
-  <div class="sh-drag"></div>
+  <div class="sh-grip"></div>
   <div class="sh-hdr"><span class="sh-ttl" id="detLabel">Dettaglio</span><button class="sh-cls" onclick="closeSh('det')">✕</button></div>
-  <div class="sh-body" id="detBody"></div>
+  <div id="detBody"></div>
 </div>
 
-<!-- SETTINGS SHEET -->
+<!-- SETTINGS -->
 <div class="ov" id="setOv" onclick="closeSh('set')"></div>
 <div class="sh" id="setSh">
-  <div class="sh-drag"></div>
+  <div class="sh-grip"></div>
   <div class="sh-hdr"><span class="sh-ttl">Impostazioni</span><button class="sh-cls" onclick="closeSh('set')">✕</button></div>
   <div class="sh-body">
     <div class="set-row">
       <div class="set-lbl">Google Apps Script URL</div>
-      <div class="set-sub">Collega l'app al backend su Google Sheets. Tutti gli utenti con questo URL condivideranno lo stesso archivio in tempo reale.</div>
+      <div class="set-sub">Backend condiviso su Google Sheets — tutti i dispositivi vedono lo stesso archivio in tempo reale.</div>
       <input class="set-input" id="gasUrlIn" type="url" placeholder="https://script.google.com/macros/s/…/exec">
-      <button class="btn-save" style="margin-top:.5rem;padding:.65rem" onclick="saveGasUrl()">Salva e testa connessione</button>
-      <div class="status-row"><div class="sdot" id="gasDot"></div><span class="set-stat" id="gasStat">Non configurato · modalità locale (localStorage)</span></div>
+      <button class="btn-save" style="margin-top:.5rem;padding:.62rem" onclick="saveGasUrl()">Salva e testa connessione</button>
+      <div class="status-row"><div class="sdot" id="gasDot"></div><span class="set-stat" id="gasStat">Non configurato · modalità locale</span></div>
     </div>
     <div class="set-sep">Migrazione dati</div>
     <div class="set-row">
       <div class="set-lbl">Importa Ricettario precedente</div>
-      <div class="set-sub">Rileva le ricette salvate nella vecchia app (localStorage: <code>rfam_v3</code>) e le importa nel Ricettario.</div>
+      <div class="set-sub">Rileva le ricette nella vecchia app (<code>rfam_v3</code>) e le importa nel Ricettario.</div>
       <button class="btn-mig" onclick="migrateOld()">↑ Importa da app precedente</button>
     </div>
     <div class="set-sep">Backup</div>
@@ -525,15 +1102,13 @@ body{background:#fff;color:#0e0e0e;font-family:'Jost',sans-serif;font-weight:400
     <input type="file" id="importFile" style="display:none" accept=".json" onchange="doImport(event)">
     <div class="set-sep">Guida Apps Script</div>
     <div class="set-guide">
-      <p>1. Vai su <a href="https://script.google.com" target="_blank">script.google.com</a> → Nuovo progetto</p>
-      <p>2. Incolla il codice <strong>Code.gs</strong> (scaricato separatamente)</p>
-      <p>3. Sostituisci <code>SHEET_ID</code> con l'ID del tuo Google Sheet</p>
-      <p>4. Distribuisci → App Web → Accesso: <strong>Chiunque</strong></p>
-      <p>5. Copia l'URL e incollalo nel campo qui sopra</p>
-      <p>6. Condividi l'URL dell'app (questo file HTML) con i collaboratori</p>
+      <p>1. <a href="https://script.google.com" target="_blank">script.google.com</a> → Nuovo progetto → incolla <strong>Code.gs</strong></p>
+      <p>2. Sostituisci <code>SHEET_ID</code> con l'ID del tuo Google Sheet</p>
+      <p>3. Distribuisci → App Web → Accesso: <strong>Chiunque</strong></p>
+      <p>4. Copia l'URL <code>/exec</code> e incollalo qui sopra</p>
     </div>
-    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);font-size:.65rem;color:var(--muted);text-align:center">
-      Atelier Straccini Hub · v2.0 · 2025<br>localStorage: <code>atelier_hub_v2</code>
+    <div style="margin-top:1.4rem;padding-top:.9rem;border-top:1px solid var(--silver);font-size:.6rem;color:var(--mist);text-align:center">
+      Atelier Straccini · v3.0 · 2025 · <code>atelier_hub_v2</code>
     </div>
   </div>
 </div>
@@ -546,12 +1121,15 @@ body{background:#fff;color:#0e0e0e;font-family:'Jost',sans-serif;font-weight:400
 // ═══════════════════════════════════════════════════
 const LS_KEY = 'atelier_hub_v2';
 const GAS_KEY = 'atelier_gas_url';
-const OLD_KEY = 'rfam_v3'; // vecchia app
+const OLD_KEY = 'rfam_v3';
 
 let GAS_URL = localStorage.getItem(GAS_KEY) || '';
-let D = { medolce:[], gastronomia:[], ricettario:[], notizie:[] };
-let CUR = 'home';
+let D = { medolce:[], gastronomia:[], ricettario:[], notizie:[], luoghi:[] };
 let FILT = { md:'all', gf:'all', rc:'all' };
+let GF_VIEW = 'lista';
+let FILT_LUOGO = 'all';
+let MAP = null;
+let MAP_MARKERS = [];
 
 const MD_SUBS = {
   A:{ A1:'Praline con guscio', A2:'Cioccolatini ripieni', A3:'Tartufi & Rocher', A4:'Tavolette monorigine', A5:'Tavolette con inclusi' },
@@ -559,160 +1137,123 @@ const MD_SUBS = {
   C:{ C1:'Ganache & Ripieni', C2:'Pralinati & Croccanti', C3:'Gelatine, Composte & Coulis', C4:'Aromi, Infusioni & Spezie', C5:'Elementi Innovativi', C6:'Biscotti Base & Fondi' }
 };
 const RC_ICO = {'🍝 Primi':'🍝','🥩 Secondi':'🥩','🫒 Antipasti':'🫒','🍫 Dolci':'🍫','🍞 Pane & Lievitati':'🍞','🥗 Contorni':'🥗','🍹 Bevande':'🍹'};
-const GF_ICO = { T:'🏛', I:'⚗️', M:'🌾', S:'🍂' };
+const GF_ICO_SVG = {
+  T: `<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="1"/><path d="M8 21h8m-4-4v4"/></svg>`,
+  I: `<svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>`,
+  M: `<svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  S: `<svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9 4.9 19.1"/></svg>`
+};
+const LUOGO_LABEL = { rist:'RIST', vino:'VINO', merc:'MERC' };
 
 // ═══════════════════════════════════════════════════
-//  LOCAL STORAGE
+//  STORAGE
 // ═══════════════════════════════════════════════════
 function loadLocal() {
   try { const r = localStorage.getItem(LS_KEY); if (r) D = { ...D, ...JSON.parse(r) }; } catch(e) {}
+  if (!D.luoghi) D.luoghi = [];
 }
-function saveLocal() {
-  localStorage.setItem(LS_KEY, JSON.stringify(D));
-}
-function genId() {
-  return Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2,5).toUpperCase();
-}
+function saveLocal() { localStorage.setItem(LS_KEY, JSON.stringify(D)); }
+function genId() { return Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2,5).toUpperCase(); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ═══════════════════════════════════════════════════
-//  GAS API
+//  GAS
 // ═══════════════════════════════════════════════════
 async function gasGet(section) {
   if (!GAS_URL) return null;
-  try {
-    const r = await fetch(GAS_URL + '?section=' + section, { mode:'cors' });
-    const j = await r.json();
-    return j.ok ? j.data : null;
-  } catch(e) { return null; }
+  try { const r = await fetch(GAS_URL+'?section='+section); const j = await r.json(); return j.ok ? j.data : null; }
+  catch(e) { return null; }
 }
 async function gasPost(action, section, data, id) {
   if (!GAS_URL) return;
-  try {
-    await fetch(GAS_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action, section, data, id }),
-      headers: { 'Content-Type': 'text/plain' }
-    });
-  } catch(e) {}
+  try { await fetch(GAS_URL, { method:'POST', body: JSON.stringify({action,section,data,id}), headers:{'Content-Type':'text/plain'} }); } catch(e) {}
 }
 async function syncSection(key) {
-  const remote = await gasGet(key);
-  if (remote && Array.isArray(remote) && remote.length > 0) {
-    D[key] = remote;
-    saveLocal();
-    return true;
-  }
+  const r = await gasGet(key);
+  if (r && Array.isArray(r) && r.length > 0) { D[key] = r; saveLocal(); return true; }
   return false;
 }
 
 // ═══════════════════════════════════════════════════
-//  NAVIGATION
+//  NAV
 // ═══════════════════════════════════════════════════
-const VIEW_MAP = { home:'vHome', md:'vMd', gf:'vGf', rc:'vRc' };
-const BN_MAP   = { home:'bnHome', md:'bnMd', gf:'bnGf', rc:'bnRc' };
-const SUB_MAP  = { home:'Hub Gastronomico · Marche', md:"M'è dolce · Recanati", gf:'Gastronomia di Frontiera · Marche', rc:'Ricettario di Famiglia' };
+const VIEWS = { home:'vHome', md:'vMd', gf:'vGf', rc:'vRc' };
+const BNS   = { home:'bnHome', md:'bnMd', gf:'bnGf', rc:'bnRc' };
+const TAGS  = { home:'Hub Gastronomico · Marche', md:"M'è dolce · Recanati", gf:'Gastronomia di Frontiera · Italia Centrale', rc:'Ricettario di Famiglia' };
+const SEC_KEYS = { md:'medolce', gf:'gastronomia', rc:'ricettario' };
+const SEC_LABELS = { md:"M'è dolce", gf:'Gastronomia di Frontiera', rc:'Ricettario' };
 
 function goView(v) {
-  Object.values(VIEW_MAP).forEach(id => document.getElementById(id).classList.remove('on'));
-  Object.values(BN_MAP).forEach(id => document.getElementById(id).classList.remove('on'));
-  document.getElementById(VIEW_MAP[v]).classList.add('on');
-  document.getElementById(BN_MAP[v]).classList.add('on');
-  document.getElementById('hdrSub').textContent = SUB_MAP[v] || '';
-  CUR = v;
-  window.scrollTo(0, 0);
-  if (v === 'home') { renderHome(); }
-  if (v === 'md')   { renderMd(); syncSection('medolce').then(ok => ok && renderMd()); }
-  if (v === 'gf')   { renderGf(); syncSection('gastronomia').then(ok => ok && renderGf()); }
-  if (v === 'rc')   { renderRc(); syncSection('ricettario').then(ok => ok && renderRc()); }
+  Object.values(VIEWS).forEach(id => document.getElementById(id).classList.remove('on'));
+  Object.values(BNS).forEach(id => document.getElementById(id).classList.remove('on'));
+  document.getElementById(VIEWS[v]).classList.add('on');
+  document.getElementById(BNS[v]).classList.add('on');
+  document.getElementById('hdrTag').textContent = TAGS[v] || '';
+  window.scrollTo(0,0);
+  if (v==='home') renderHome();
+  if (v==='md')  { renderMd();  syncSection('medolce').then(ok=>ok&&renderMd()); }
+  if (v==='gf')  { renderGf();  syncSection('gastronomia').then(ok=>ok&&renderGf()); syncSection('luoghi').then(ok=>ok&&renderLuoghi()); }
+  if (v==='rc')  { renderRc();  syncSection('ricettario').then(ok=>ok&&renderRc()); }
 }
 
 // ═══════════════════════════════════════════════════
 //  HOME
 // ═══════════════════════════════════════════════════
 function renderHome() {
-  document.getElementById('homeDate').textContent =
-    new Date().toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('homeDate').textContent = new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   updCounts();
-  syncSection('notizie').then(() => renderNews());
+  syncSection('notizie').then(()=>renderNews());
 }
-
 function updCounts() {
   document.getElementById('cntMd').textContent = D.medolce.length + ' ricette';
   document.getElementById('cntGf').textContent = D.gastronomia.length + ' ricette';
   document.getElementById('cntRc').textContent = D.ricettario.length + ' ricette';
 }
-
 function renderNews() {
   const el = document.getElementById('newsFeed');
   if (!D.notizie.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-ico">📰</div><div class="empty-t">Nessuna nota ancora</div><div class="empty-s">Aggiungi articoli, note tecniche o aggiornamenti.</div></div>`;
+    el.innerHTML = `<div class="empty"><div class="empty-mark"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div><div class="empty-t">Nessuna nota ancora</div><div class="empty-s">Aggiungi articoli, note tecniche o aggiornamenti dal mondo della gastronomia.</div></div>`;
     return;
   }
-  el.innerHTML = [...D.notizie]
-    .sort((a,b) => new Date(b.data||0) - new Date(a.data||0))
-    .map(n => `<div class="news-card" onclick="openNewsDet('${n.id}')">
-      <div class="news-cat-lbl">${n.categoria||'Nota'}${n.fonte?' · '+n.fonte:''}</div>
-      <div class="news-title">${esc(n.titolo||'')}</div>
-      ${n.testo ? `<div class="news-prev">${esc(n.testo)}</div>` : ''}
-      <div class="news-meta-s">${n.data ? new Date(n.data).toLocaleDateString('it-IT') : ''}</div>
+  el.innerHTML = [...D.notizie].sort((a,b)=>new Date(b.data||0)-new Date(a.data||0)).map(n=>`
+    <div class="news-item" onclick="openNewsDet('${n.id}')">
+      <div class="news-cat">${esc(n.categoria||'Nota')}${n.fonte?' · '+esc(n.fonte):''}</div>
+      <div class="news-ttl">${esc(n.titolo||'')}</div>
+      ${n.testo?`<div class="news-prev">${esc(n.testo)}</div>`:''}
+      <div class="news-date">${n.data?new Date(n.data).toLocaleDateString('it-IT'):''}</div>
     </div>`).join('');
 }
-
 async function saveNews() {
   const t = document.getElementById('nw_tit').value.trim();
   if (!t) { toast('Inserisci un titolo'); return; }
-  const n = {
-    id: genId(), titolo: t,
-    categoria: document.getElementById('nw_cat').value,
-    fonte: document.getElementById('nw_fonte').value.trim(),
-    testo: document.getElementById('nw_txt').value.trim(),
-    url: document.getElementById('nw_url').value.trim(),
-    data: new Date().toISOString()
-  };
-  D.notizie.unshift(n);
-  saveLocal();
-  gasPost('add', 'notizie', n);
-  closeSh('news');
-  renderNews();
-  ['nw_tit','nw_fonte','nw_txt','nw_url'].forEach(id => document.getElementById(id).value = '');
+  const n = { id:genId(), titolo:t, categoria:document.getElementById('nw_cat').value, fonte:document.getElementById('nw_fonte').value.trim(), testo:document.getElementById('nw_txt').value.trim(), url:document.getElementById('nw_url').value.trim(), data:new Date().toISOString() };
+  D.notizie.unshift(n); saveLocal(); gasPost('add','notizie',n);
+  closeSh('news'); renderNews(); ['nw_tit','nw_fonte','nw_txt','nw_url'].forEach(id=>document.getElementById(id).value='');
   toast('Nota pubblicata');
 }
-
 function openNewsDet(id) {
-  const n = D.notizie.find(x => x.id === id); if (!n) return;
-  document.getElementById('detLabel').textContent = n.categoria || 'Nota';
-  document.getElementById('detBody').innerHTML = `
-    <div style="font-size:.6rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem">
-      ${n.data ? new Date(n.data).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : ''}
-      ${n.fonte ? ' · ' + esc(n.fonte) : ''}
-    </div>
-    <div class="d-title">${esc(n.titolo)}</div>
-    ${n.testo ? `<div style="margin-top:.9rem;font-family:'EB Garamond',serif;font-size:.95rem;line-height:1.75;color:#333">${esc(n.testo)}</div>` : ''}
-    ${n.url ? `<a href="${n.url}" target="_blank" style="display:inline-block;margin-top:.9rem;font-size:.74rem;color:var(--ink);border-bottom:1px solid">Leggi la fonte →</a>` : ''}
-    <div class="d-acts" style="grid-template-columns:1fr;margin-top:1.2rem">
-      <button class="d-btn danger" onclick="delNews('${n.id}')">🗑️ Elimina nota</button>
-    </div>`;
+  const n = D.notizie.find(x=>x.id===id); if (!n) return;
+  document.getElementById('detLabel').textContent = n.categoria||'Nota';
+  document.getElementById('detBody').innerHTML = `<div class="sh-body"><div style="font-size:.58rem;color:var(--fog);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem">${n.data?new Date(n.data).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):''} ${n.fonte?'· '+esc(n.fonte):''}</div><div class="det-ttl" style="font-size:1.5rem;color:var(--navy);margin-bottom:.5rem">${esc(n.titolo)}</div>${n.testo?`<div style="font-family:var(--font-body);font-size:.93rem;line-height:1.75;color:var(--navy2)">${esc(n.testo)}</div>`:''} ${n.url?`<a href="${n.url}" target="_blank" style="display:inline-block;margin-top:.9rem;font-size:.73rem;color:var(--steel);border-bottom:1px solid">Leggi la fonte →</a>`:''}<div class="det-acts" style="grid-template-columns:1fr"><button class="det-btn danger" onclick="delNews('${n.id}')">🗑 Elimina nota</button></div></div>`;
   openSh('det');
 }
-
 async function delNews(id) {
   if (!confirm('Eliminare questa nota?')) return;
-  D.notizie = D.notizie.filter(x => x.id !== id);
-  saveLocal(); gasPost('delete', 'notizie', null, id);
+  D.notizie = D.notizie.filter(x=>x.id!==id); saveLocal(); gasPost('delete','notizie',null,id);
   closeSh('det'); renderNews(); toast('Nota eliminata');
 }
 
 // ═══════════════════════════════════════════════════
-//  FILTER TABS (condivisa tra sezioni)
+//  FILTER TABS
 // ═══════════════════════════════════════════════════
 function filtTab(sec, val, btn) {
   FILT[sec] = val;
-  const tabsId = { md:'tabsMd', gf:'tabsGf', rc:'tabsRc' }[sec];
-  document.querySelectorAll('#' + tabsId + ' .ftab').forEach(b => b.classList.remove('on'));
+  const tabsId = { md:'tabsMd', gf:'tabsGfInner', rc:'tabsRc' }[sec];
+  document.querySelectorAll('#'+tabsId+' .ftab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  if (sec === 'md') renderMd();
-  if (sec === 'gf') renderGf();
-  if (sec === 'rc') renderRc();
+  if (sec==='md') renderMd();
+  if (sec==='gf') renderGf();
+  if (sec==='rc') renderRc();
 }
 
 // ═══════════════════════════════════════════════════
@@ -721,511 +1262,511 @@ function filtTab(sec, val, btn) {
 function updMdSub() {
   const c = document.getElementById('md_cat').value;
   const s = document.getElementById('md_sub');
-  if (!c || !MD_SUBS[c]) { s.innerHTML = '<option value="">—</option>'; return; }
-  s.innerHTML = '<option value="">—</option>' +
-    Object.entries(MD_SUBS[c]).map(([k,v]) => `<option value="${k}">${k} · ${v}</option>`).join('');
+  if (!c||!MD_SUBS[c]) { s.innerHTML='<option value="">—</option>'; return; }
+  s.innerHTML = '<option value="">—</option>'+Object.entries(MD_SUBS[c]).map(([k,v])=>`<option value="${k}">${k} · ${v}</option>`).join('');
+}
+
+// Generate QR code as SVG pattern
+function makeQR(url) {
+  if (!url) return '';
+  // Simple visual QR placeholder — styled as ink pattern
+  const seed = url.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const cells = [];
+  for (let i=0;i<49;i++) { const v=(seed*i*31+i*7)%100; cells.push(v>40?1:0); }
+  // Always set corner markers
+  [0,1,2,3,4,5,6, 42,43,44,45,46,47,48, 7,14,21,28,35].forEach(i=>cells[i]=1);
+  return `<div style="width:48px;height:48px;display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:4px;background:var(--pearl);border:1px solid var(--silver)">
+    ${cells.map(c=>`<div style="background:${c?'var(--navy)':'transparent'}"></div>`).join('')}
+  </div>`;
 }
 
 function renderMd() {
-  const data = FILT.md === 'all' ? D.medolce : D.medolce.filter(r => r.categoria === FILT.md);
+  const data = FILT.md==='all' ? D.medolce : D.medolce.filter(r=>r.categoria===FILT.md);
   const el = document.getElementById('listMd');
   if (!data.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-ico">🍫</div><div class="empty-t">Nessuna ricetta ancora</div><div class="empty-s">Aggiungi la prima ricetta M'è dolce.</div><button class="btn-empty" onclick="openAddMd()">+ Nuova ricetta</button></div>`;
+    el.innerHTML = `<div class="empty"><div class="empty-mark"><svg viewBox="0 0 24 24"><path d="M12 3c-2 0-5 2-5 6s2 8 5 10c3-2 5-6 5-10s-3-6-5-6z"/><path d="M12 3v16"/><path d="M7 9h10"/></svg></div><div class="empty-t">Nessuna ricetta ancora</div><div class="empty-s">Aggiungi la prima ricetta M'è dolce con la sua poetica leopardiana.</div><button class="btn-empty" onclick="openAddMd()">+ Nuova ricetta</button></div>`;
     return;
   }
   el.innerHTML = data.map(r => {
-    const ico = r.categoria === 'A' ? '🍫' : r.categoria === 'B' ? '🎂' : '🌿';
-    const sub = (r.categoria && MD_SUBS[r.categoria] && r.sottocategoria) ? MD_SUBS[r.categoria][r.sottocategoria] : '';
-    return `<div class="rcard" onclick="openDet('${r.id}','md')">
-      <div class="rcard-ico">${ico}</div>
-      <div class="rcard-body">
-        <div class="rcard-cat">${r.categoria||''} ${sub ? '· '+sub : ''}</div>
-        <div class="rcard-name">${esc(r.nome||'')}</div>
-        ${r.descrizione ? `<div class="rcard-desc">${esc(r.descrizione)}</div>` : ''}
-      </div><span class="rcard-arr">›</span></div>`;
+    const sub = (r.categoria&&MD_SUBS[r.categoria]&&r.sottocategoria) ? MD_SUBS[r.categoria][r.sottocategoria] : (r.sottocategoria||'');
+    const citShort = r.citazione ? r.citazione.substring(0,80)+(r.citazione.length>80?'…':'') : '';
+    return `<div class="md-card" onclick="openDet('${r.id}','md')">
+      <div class="md-card-top">
+        <div class="md-card-sub">${esc(r.categoria||'')} ${sub?'· '+esc(sub):''}</div>
+        <div class="md-card-name">${esc(r.nome||'')}</div>
+        ${citShort?`<div class="md-card-cit">${esc(citShort)}</div>`:''}
+      </div>
+      <div class="md-card-body">
+        <div class="md-card-desc">${esc(r.descrizione||'')}</div>
+      </div>
+      <div class="md-card-footer">
+        <div class="md-music">${r.musica?`<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--gold);fill:none;stroke-width:1.5;vertical-align:middle;margin-right:3px"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>${esc(r.musica)}`:'&nbsp;'}</div>
+        ${r.audioUrl||r.url?makeQR(r.audioUrl||r.url):''}
+      </div>
+    </div>`;
   }).join('');
 }
 
 function openAddMd() {
   document.getElementById('md_id').value = '';
   document.getElementById('mdShTtl').textContent = "Nuova Ricetta M'è dolce";
-  ['md_nome','md_cod','md_desc','md_ings','md_proc','md_note','md_abbi','md_music','md_cit','md_fonte'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('md_cat').value = '';
-  document.getElementById('md_sub').innerHTML = '<option value="">—</option>';
-  document.getElementById('md_delBtn').style.display = 'none';
+  ['md_nome','md_cod','md_desc','md_ings','md_proc','md_note','md_abbi','md_music','md_url','md_cit','md_fonte'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('md_cat').value=''; document.getElementById('md_sub').innerHTML='<option value="">—</option>';
+  document.getElementById('md_delBtn').style.display='none';
   openSh('md');
 }
-
 function openEditMd(id) {
-  const r = D.medolce.find(x => x.id === id); if (!r) return;
-  document.getElementById('md_id').value = id;
-  document.getElementById('mdShTtl').textContent = 'Modifica · ' + r.nome;
-  document.getElementById('md_nome').value = r.nome||'';
-  document.getElementById('md_cod').value = r.codice||'';
-  document.getElementById('md_cat').value = r.categoria||''; updMdSub();
-  document.getElementById('md_sub').value = r.sottocategoria||'';
-  document.getElementById('md_desc').value = r.descrizione||'';
-  document.getElementById('md_ings').value = (r.ingredienti||[]).map(i => `${i.nome||i} | ${i.peso||''} | ${i.pct||''}`).join('\n');
-  document.getElementById('md_proc').value = (r.procedimento||[]).join('\n');
-  document.getElementById('md_note').value = r.note||'';
-  document.getElementById('md_abbi').value = r.abbinamento||'';
-  document.getElementById('md_music').value = r.musica||'';
-  document.getElementById('md_cit').value = r.citazione||'';
-  document.getElementById('md_fonte').value = r.fonte||'';
-  document.getElementById('md_delBtn').style.display = 'block';
+  const r = D.medolce.find(x=>x.id===id); if (!r) return;
+  document.getElementById('md_id').value=id;
+  document.getElementById('mdShTtl').textContent='Modifica · '+r.nome;
+  document.getElementById('md_nome').value=r.nome||'';
+  document.getElementById('md_cod').value=r.codice||'';
+  document.getElementById('md_cat').value=r.categoria||''; updMdSub();
+  document.getElementById('md_sub').value=r.sottocategoria||'';
+  document.getElementById('md_desc').value=r.descrizione||'';
+  document.getElementById('md_ings').value=(r.ingredienti||[]).map(i=>`${i.nome||i} | ${i.peso||''} | ${i.pct||''}`).join('\n');
+  document.getElementById('md_proc').value=(r.procedimento||[]).join('\n');
+  document.getElementById('md_note').value=r.note||'';
+  document.getElementById('md_abbi').value=r.abbinamento||'';
+  document.getElementById('md_music').value=r.musica||'';
+  document.getElementById('md_url').value=r.audioUrl||r.url||'';
+  document.getElementById('md_cit').value=r.citazione||'';
+  document.getElementById('md_fonte').value=r.fonte||'';
+  document.getElementById('md_delBtn').style.display='block';
   openSh('md');
 }
-
-function parseMdIngs(raw) {
-  return raw.split('\n').filter(l => l.trim()).map(l => {
-    const p = l.split('|').map(s => s.trim());
-    return { nome: p[0]||'', peso: parseFloat(p[1])||0, pct: parseFloat(p[2])||0, unita: 'g' };
-  });
-}
-
+function parseMdIngs(raw) { return raw.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|').map(s=>s.trim());return{nome:p[0]||'',peso:parseFloat(p[1])||0,pct:parseFloat(p[2])||0,unita:'g'};}); }
 async function saveMd() {
-  const nome = document.getElementById('md_nome').value.trim();
-  const cat  = document.getElementById('md_cat').value;
-  if (!nome || !cat) { toast('Nome e categoria obbligatori'); return; }
-  const existId = document.getElementById('md_id').value;
-  const isEdit  = !!existId;
-  const id = existId || genId();
-  const orig = isEdit ? (D.medolce.find(x => x.id === id) || {}) : {};
-  const r = {
-    id, nome, codice: document.getElementById('md_cod').value.trim(),
-    categoria: cat, sottocategoria: document.getElementById('md_sub').value,
-    descrizione: document.getElementById('md_desc').value.trim(),
-    ingredienti: parseMdIngs(document.getElementById('md_ings').value),
-    procedimento: document.getElementById('md_proc').value.split('\n').filter(Boolean),
-    note: document.getElementById('md_note').value.trim(),
-    abbinamento: document.getElementById('md_abbi').value.trim(),
-    musica: document.getElementById('md_music').value.trim(),
-    citazione: document.getElementById('md_cit').value.trim(),
-    fonte: document.getElementById('md_fonte').value.trim(),
-    dataCreazione: orig.dataCreazione || new Date().toISOString()
-  };
-  if (isEdit) { const i = D.medolce.findIndex(x => x.id === id); D.medolce[i] = r; gasPost('update','medolce',r,id); }
+  const nome=document.getElementById('md_nome').value.trim();
+  const cat=document.getElementById('md_cat').value;
+  if (!nome||!cat) { toast('Nome e categoria obbligatori'); return; }
+  const existId=document.getElementById('md_id').value;
+  const isEdit=!!existId; const id=existId||genId();
+  const orig=isEdit?(D.medolce.find(x=>x.id===id)||{}):{};
+  const r={id,nome,codice:document.getElementById('md_cod').value.trim(),categoria:cat,sottocategoria:document.getElementById('md_sub').value,descrizione:document.getElementById('md_desc').value.trim(),ingredienti:parseMdIngs(document.getElementById('md_ings').value),procedimento:document.getElementById('md_proc').value.split('\n').filter(Boolean),note:document.getElementById('md_note').value.trim(),abbinamento:document.getElementById('md_abbi').value.trim(),musica:document.getElementById('md_music').value.trim(),audioUrl:document.getElementById('md_url').value.trim(),citazione:document.getElementById('md_cit').value.trim(),fonte:document.getElementById('md_fonte').value.trim(),dataCreazione:orig.dataCreazione||new Date().toISOString()};
+  if (isEdit) { const i=D.medolce.findIndex(x=>x.id===id); D.medolce[i]=r; gasPost('update','medolce',r,id); }
   else { D.medolce.unshift(r); gasPost('add','medolce',r); }
-  saveLocal(); closeSh('md'); renderMd(); updCounts();
-  toast(isEdit ? 'Ricetta aggiornata' : 'Ricetta archiviata');
+  saveLocal(); closeSh('md'); renderMd(); updCounts(); toast(isEdit?'Aggiornata':'Archiviata');
 }
-
 async function delMd() {
-  const id = document.getElementById('md_id').value;
-  if (!id || !confirm('Eliminare questa ricetta?')) return;
-  D.medolce = D.medolce.filter(x => x.id !== id);
-  saveLocal(); gasPost('delete','medolce',null,id);
-  closeSh('md'); renderMd(); updCounts(); toast('Ricetta eliminata');
+  const id=document.getElementById('md_id').value;
+  if (!id||!confirm('Eliminare?')) return;
+  D.medolce=D.medolce.filter(x=>x.id!==id); saveLocal(); gasPost('delete','medolce',null,id);
+  closeSh('md'); renderMd(); updCounts(); toast('Eliminata');
 }
 
 // ═══════════════════════════════════════════════════
 //  GASTRONOMIA
 // ═══════════════════════════════════════════════════
+function setGfView(v) {
+  GF_VIEW = v;
+  ['lista','mappa','luoghi'].forEach(x=>{
+    document.getElementById('btn'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('on',v===x);
+  });
+  document.getElementById('gfListaView').style.display = v==='lista' ? 'block' : 'none';
+  document.getElementById('mapContainer').classList.toggle('on', v==='mappa');
+  document.getElementById('mapLegend').style.display = v==='mappa' ? 'flex' : 'none';
+  document.getElementById('gfLuoghiView').style.display = v==='luoghi' ? 'block' : 'none';
+  if (v==='mappa') initMap();
+  if (v==='luoghi') renderLuoghi();
+}
+
 function renderGf() {
-  const data = FILT.gf === 'all' ? D.gastronomia : D.gastronomia.filter(r => r.categoria === FILT.gf);
+  const data = FILT.gf==='all' ? D.gastronomia : D.gastronomia.filter(r=>r.categoria===FILT.gf);
   const el = document.getElementById('listGf');
   if (!data.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-ico">🌿</div><div class="empty-t">Nessuna ricetta ancora</div><div class="empty-s">Aggiungi la prima ricetta di Gastronomia di Frontiera.</div><button class="btn-empty" onclick="openAddGf()">+ Nuova ricetta</button></div>`;
+    el.innerHTML=`<div class="empty"><div class="empty-mark"><svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.7 1.3 3 3 3s3-1.3 3-3V2"/><line x1="6" y1="2" x2="6" y2="22"/><path d="M18 2c0 0-4 2-4 8s4 4 4 4v8"/></svg></div><div class="empty-t">Nessuna ricetta ancora</div><div class="empty-s">Aggiungi la prima ricetta di Gastronomia di Frontiera.</div><button class="btn-empty" onclick="openAddGf()">+ Nuova ricetta</button></div>`;
     return;
   }
-  el.innerHTML = data.map(r => `<div class="rcard" onclick="openDet('${r.id}','gf')">
-    <div class="rcard-ico">${GF_ICO[r.categoria]||'🌿'}</div>
+  el.innerHTML = data.map(r=>`<div class="rcard" onclick="openDet('${r.id}','gf')">
+    <div class="rcard-ico">${GF_ICO_SVG[r.categoria]||'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>'}</div>
     <div class="rcard-body">
-      <div class="rcard-cat">${r.categoria||''} ${r.tecnica?'· '+r.tecnica:''} ${r.stagione?'· '+r.stagione:''}</div>
+      <div class="rcard-cat">${r.categoria||''} ${r.regione?'· '+esc(r.regione):''} ${r.tecnica?'· '+esc(r.tecnica):''}</div>
       <div class="rcard-name">${esc(r.nome||'')}</div>
-      ${r.descrizione ? `<div class="rcard-desc">${esc(r.descrizione)}</div>` : ''}
-    </div><span class="rcard-arr">›</span></div>`).join('');
+      ${r.descrizione?`<div class="rcard-desc">${esc(r.descrizione)}</div>`:''}
+    </div><div class="rcard-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>`).join('');
 }
 
 function openAddGf() {
-  document.getElementById('gf_id').value = '';
-  document.getElementById('gfShTtl').textContent = 'Nuova Ricetta · Gastronomia';
-  ['gf_nome','gf_desc','gf_ings','gf_proc','gf_note','gf_abbi','gf_insp','gf_fonte'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('gf_cat').value = '';
-  document.getElementById('gf_tec').value = '';
-  document.getElementById('gf_stag').value = '';
-  document.getElementById('gf_dif').value = 'Media';
-  document.getElementById('gf_delBtn').style.display = 'none';
-  openSh('gf');
+  document.getElementById('gf_id').value='';
+  document.getElementById('gfShTtl').textContent='Nuova Ricetta · Gastronomia';
+  ['gf_nome','gf_desc','gf_ings','gf_proc','gf_note','gf_abbi','gf_prod','gf_rist','gf_fonte'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('gf_cat').value=''; document.getElementById('gf_reg').value=''; document.getElementById('gf_tec').value=''; document.getElementById('gf_stag').value='';
+  document.getElementById('gf_delBtn').style.display='none'; openSh('gf');
 }
-
 function openEditGf(id) {
-  const r = D.gastronomia.find(x => x.id === id); if (!r) return;
-  document.getElementById('gf_id').value = id;
-  document.getElementById('gfShTtl').textContent = 'Modifica · ' + r.nome;
-  document.getElementById('gf_nome').value = r.nome||'';
-  document.getElementById('gf_cat').value = r.categoria||'';
-  document.getElementById('gf_tec').value = r.tecnica||'';
-  document.getElementById('gf_stag').value = r.stagione||'';
-  document.getElementById('gf_dif').value = r.difficolta||'Media';
-  document.getElementById('gf_desc').value = r.descrizione||'';
-  document.getElementById('gf_ings').value = (r.ingredienti||[]).join('\n');
-  document.getElementById('gf_proc').value = (r.procedimento||[]).join('\n');
-  document.getElementById('gf_note').value = r.note||'';
-  document.getElementById('gf_abbi').value = r.abbinamento||'';
-  document.getElementById('gf_insp').value = r.ispirazione||'';
-  document.getElementById('gf_fonte').value = r.fonte||'';
-  document.getElementById('gf_delBtn').style.display = 'block';
-  openSh('gf');
+  const r=D.gastronomia.find(x=>x.id===id); if (!r) return;
+  document.getElementById('gf_id').value=id;
+  document.getElementById('gfShTtl').textContent='Modifica · '+r.nome;
+  document.getElementById('gf_nome').value=r.nome||'';
+  document.getElementById('gf_cat').value=r.categoria||'';
+  document.getElementById('gf_reg').value=r.regione||'';
+  document.getElementById('gf_tec').value=r.tecnica||'';
+  document.getElementById('gf_stag').value=r.stagione||'';
+  document.getElementById('gf_desc').value=r.descrizione||'';
+  document.getElementById('gf_ings').value=(r.ingredienti||[]).join('\n');
+  document.getElementById('gf_proc').value=(r.procedimento||[]).join('\n');
+  document.getElementById('gf_note').value=r.note||'';
+  document.getElementById('gf_abbi').value=r.abbinamento||'';
+  document.getElementById('gf_prod').value=r.produttore||'';
+  document.getElementById('gf_rist').value=r.ristorante||'';
+  document.getElementById('gf_fonte').value=r.fonte||'';
+  document.getElementById('gf_delBtn').style.display='block'; openSh('gf');
 }
-
 async function saveGf() {
-  const nome = document.getElementById('gf_nome').value.trim();
-  const cat  = document.getElementById('gf_cat').value;
-  if (!nome || !cat) { toast('Nome e categoria obbligatori'); return; }
-  const existId = document.getElementById('gf_id').value;
-  const isEdit = !!existId;
-  const id = existId || genId();
-  const orig = isEdit ? (D.gastronomia.find(x => x.id === id) || {}) : {};
-  const r = {
-    id, nome, categoria: cat,
-    tecnica: document.getElementById('gf_tec').value,
-    stagione: document.getElementById('gf_stag').value,
-    difficolta: document.getElementById('gf_dif').value,
-    descrizione: document.getElementById('gf_desc').value.trim(),
-    ingredienti: document.getElementById('gf_ings').value.split('\n').filter(Boolean),
-    procedimento: document.getElementById('gf_proc').value.split('\n').filter(Boolean),
-    note: document.getElementById('gf_note').value.trim(),
-    abbinamento: document.getElementById('gf_abbi').value.trim(),
-    ispirazione: document.getElementById('gf_insp').value.trim(),
-    fonte: document.getElementById('gf_fonte').value.trim(),
-    dataCreazione: orig.dataCreazione || new Date().toISOString()
-  };
-  if (isEdit) { const i = D.gastronomia.findIndex(x => x.id === id); D.gastronomia[i] = r; gasPost('update','gastronomia',r,id); }
+  const nome=document.getElementById('gf_nome').value.trim();
+  const cat=document.getElementById('gf_cat').value;
+  if (!nome||!cat) { toast('Nome e categoria obbligatori'); return; }
+  const existId=document.getElementById('gf_id').value; const isEdit=!!existId; const id=existId||genId();
+  const orig=isEdit?(D.gastronomia.find(x=>x.id===id)||{}):{};
+  const r={id,nome,categoria:cat,regione:document.getElementById('gf_reg').value,tecnica:document.getElementById('gf_tec').value,stagione:document.getElementById('gf_stag').value,descrizione:document.getElementById('gf_desc').value.trim(),ingredienti:document.getElementById('gf_ings').value.split('\n').filter(Boolean),procedimento:document.getElementById('gf_proc').value.split('\n').filter(Boolean),note:document.getElementById('gf_note').value.trim(),abbinamento:document.getElementById('gf_abbi').value.trim(),produttore:document.getElementById('gf_prod').value.trim(),ristorante:document.getElementById('gf_rist').value.trim(),fonte:document.getElementById('gf_fonte').value.trim(),dataCreazione:orig.dataCreazione||new Date().toISOString()};
+  if (isEdit) { const i=D.gastronomia.findIndex(x=>x.id===id); D.gastronomia[i]=r; gasPost('update','gastronomia',r,id); }
   else { D.gastronomia.unshift(r); gasPost('add','gastronomia',r); }
-  saveLocal(); closeSh('gf'); renderGf(); updCounts();
-  toast(isEdit ? 'Aggiornata' : 'Archiviata');
+  saveLocal(); closeSh('gf'); renderGf(); updCounts(); toast(isEdit?'Aggiornata':'Archiviata');
+}
+async function delGf() {
+  const id=document.getElementById('gf_id').value;
+  if (!id||!confirm('Eliminare?')) return;
+  D.gastronomia=D.gastronomia.filter(x=>x.id!==id); saveLocal(); gasPost('delete','gastronomia',null,id);
+  closeSh('gf'); renderGf(); updCounts(); toast('Eliminata');
 }
 
-async function delGf() {
-  const id = document.getElementById('gf_id').value;
-  if (!id || !confirm('Eliminare?')) return;
-  D.gastronomia = D.gastronomia.filter(x => x.id !== id);
-  saveLocal(); gasPost('delete','gastronomia',null,id);
-  closeSh('gf'); renderGf(); updCounts(); toast('Eliminata');
+// ═══════════════════════════════════════════════════
+//  LUOGHI & MAPPA
+// ═══════════════════════════════════════════════════
+function filtLuoghi(v, btn) {
+  FILT_LUOGO = v;
+  ['filtLuogoAll','filtLuogoRist','filtLuogoVino','filtLuogoMerc'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  btn.classList.add('on');
+  renderLuoghi();
+}
+
+function renderLuoghi() {
+  const data = FILT_LUOGO==='all' ? D.luoghi : D.luoghi.filter(l=>l.tipo===FILT_LUOGO);
+  const el = document.getElementById('listLuoghi');
+  if (!data.length) {
+    el.innerHTML=`<div class="empty"><div class="empty-mark"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></div><div class="empty-t">Nessun luogo ancora</div><div class="empty-s">Aggiungi ristoranti, cantine, mercati e produttori collegati alle tue ricette.</div><button class="btn-empty" onclick="openSh('luogo')">+ Aggiungi luogo</button></div>`;
+    return;
+  }
+  el.innerHTML = data.map(l=>`<div class="loc-card">
+    <div class="loc-badge ${l.tipo||'rist'}">${LUOGO_LABEL[l.tipo]||'?'}</div>
+    <div class="loc-body">
+      <div class="loc-name">${esc(l.nome||'')}</div>
+      <div class="loc-region">${esc(l.regione||'')} ${l.citta?'· '+esc(l.citta):''}</div>
+      ${l.desc?`<div class="loc-desc">${esc(l.desc)}</div>`:''}
+      ${l.ricetta?`<div class="loc-recipe">↗ ${esc(l.ricetta)}</div>`:''}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.3rem;flex-shrink:0">
+      ${l.web?`<a href="${l.web}" target="_blank" style="font-size:.6rem;color:var(--steel);letter-spacing:.06em;border-bottom:1px solid">Web →</a>`:''}
+      <button onclick="openEditLuogo('${l.id}')" style="border:1px solid var(--silver);background:none;cursor:pointer;font-size:.6rem;padding:.2rem .5rem;color:var(--fog)">✏</button>
+    </div>
+  </div>`).join('');
+}
+
+function initMap() {
+  if (MAP) { updateMapMarkers(); return; }
+  const container = document.getElementById('mapContainer');
+  MAP = L.map(container, { zoomControl: true, attributionControl: false }).setView([43.2, 13.2], 7);
+  // Clean grey/white tile style
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19
+  }).addTo(MAP);
+  updateMapMarkers();
+}
+
+function updateMapMarkers() {
+  if (!MAP) return;
+  MAP_MARKERS.forEach(m=>m.remove());
+  MAP_MARKERS = [];
+  const colors = { rist:'#2B5FAC', vino:'#8B5E3C', merc:'#4A7C59' };
+  D.luoghi.filter(l=>l.lat&&l.lng).forEach(l=>{
+    const col = colors[l.tipo]||'#555';
+    const icon = L.divIcon({
+      html: `<div style="width:28px;height:28px;background:${col};border:2px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.25)"><span style="display:block;transform:rotate(45deg);text-align:center;font-size:11px;line-height:24px;color:white">${l.tipo==='rist'?'R':l.tipo==='vino'?'V':'M'}</span></div>`,
+      className: '', iconSize: [28,28], iconAnchor: [14,28]
+    });
+    const m = L.marker([l.lat,l.lng],{icon}).addTo(MAP);
+    m.bindPopup(`<strong style="font-family:serif;font-size:13px">${l.nome}</strong><br><span style="font-size:11px;color:#666">${l.regione||''} ${l.citta?'· '+l.citta:''}</span>${l.ricetta?`<br><span style="font-size:11px;color:#2B5FAC">↗ ${l.ricetta}</span>`:''}`);
+    MAP_MARKERS.push(m);
+  });
+}
+
+function openSh_luogo() { openSh('luogo'); }
+
+function openEditLuogo(id) {
+  const l=D.luoghi.find(x=>x.id===id); if (!l) return;
+  document.getElementById('lu_id').value=id;
+  document.getElementById('luogoShTtl').textContent='Modifica · '+l.nome;
+  document.getElementById('lu_nome').value=l.nome||'';
+  document.getElementById('lu_tipo').value=l.tipo||'rist';
+  document.getElementById('lu_reg').value=l.regione||'';
+  document.getElementById('lu_citta').value=l.citta||'';
+  document.getElementById('lu_desc').value=l.desc||'';
+  document.getElementById('lu_lat').value=l.lat||'';
+  document.getElementById('lu_lng').value=l.lng||'';
+  document.getElementById('lu_ricetta').value=l.ricetta||'';
+  document.getElementById('lu_web').value=l.web||'';
+  document.getElementById('lu_delBtn').style.display='block';
+  openSh('luogo');
+}
+
+async function saveLuogo() {
+  const nome=document.getElementById('lu_nome').value.trim();
+  if (!nome) { toast('Nome obbligatorio'); return; }
+  const existId=document.getElementById('lu_id').value; const isEdit=!!existId; const id=existId||genId();
+  const l={id,nome,tipo:document.getElementById('lu_tipo').value,regione:document.getElementById('lu_reg').value,citta:document.getElementById('lu_citta').value.trim(),desc:document.getElementById('lu_desc').value.trim(),lat:parseFloat(document.getElementById('lu_lat').value)||null,lng:parseFloat(document.getElementById('lu_lng').value)||null,ricetta:document.getElementById('lu_ricetta').value.trim(),web:document.getElementById('lu_web').value.trim()};
+  if (isEdit) { const i=D.luoghi.findIndex(x=>x.id===id); D.luoghi[i]=l; gasPost('update','luoghi',l,id); }
+  else { D.luoghi.push(l); gasPost('add','luoghi',l); }
+  saveLocal(); closeSh('luogo'); renderLuoghi(); if(MAP) updateMapMarkers(); toast(isEdit?'Luogo aggiornato':'Luogo aggiunto');
+}
+async function delLuogo() {
+  const id=document.getElementById('lu_id').value;
+  if (!id||!confirm('Eliminare?')) return;
+  D.luoghi=D.luoghi.filter(x=>x.id!==id); saveLocal(); gasPost('delete','luoghi',null,id);
+  closeSh('luogo'); renderLuoghi(); if(MAP) updateMapMarkers(); toast('Eliminato');
 }
 
 // ═══════════════════════════════════════════════════
 //  RICETTARIO
 // ═══════════════════════════════════════════════════
 function renderRc() {
-  const data = FILT.rc === 'all' ? D.ricettario : D.ricettario.filter(r => (r.category||r.categoria) === FILT.rc);
-  const el = document.getElementById('listRc');
+  const data=FILT.rc==='all'?D.ricettario:D.ricettario.filter(r=>(r.category||r.categoria)===FILT.rc);
+  const el=document.getElementById('listRc');
   if (!data.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-ico">📖</div><div class="empty-t">Nessuna ricetta ancora</div><div class="empty-s">Aggiungi ricette o importa dalla vecchia app nelle Impostazioni.</div><button class="btn-empty" onclick="openAddRc()">+ Nuova ricetta</button></div>`;
+    el.innerHTML=`<div class="empty"><div class="empty-mark"><svg viewBox="0 0 24 24"><path d="M2 4h9v16H2z"/><path d="M13 4h9v16h-9z"/><line x1="5" y1="8" x2="9" y2="8"/><line x1="5" y1="12" x2="9" y2="12"/></svg></div><div class="empty-t">Nessuna ricetta ancora</div><div class="empty-s">Aggiungi ricette o importa dall'app precedente nelle Impostazioni.</div><button class="btn-empty" onclick="openAddRc()">+ Nuova ricetta</button></div>`;
     return;
   }
-  el.innerHTML = data.map(r => {
-    const cat = r.category || r.categoria || '';
-    const ico = r.emoji || RC_ICO[cat] || '🍽️';
-    const meta = [];
-    if (r.difficulty || r.difficolta) meta.push(r.difficulty || r.difficolta);
-    const tot = (r.prep||0) + (r.cook||0);
-    if (tot) meta.push(tot + 'min');
+  el.innerHTML=data.map(r=>{
+    const cat=r.category||r.categoria||''; const ico=r.emoji||RC_ICO[cat]||'🍽️';
+    const meta=[]; if(r.difficulty||r.difficolta)meta.push(r.difficulty||r.difficolta); const tot=(r.prep||0)+(r.cook||0); if(tot)meta.push(tot+'min');
     return `<div class="rcard" onclick="openDet('${r.id}','rc')">
-      <div class="rcard-ico">${ico}</div>
+      <div class="rcard-ico" style="font-size:20px;background:var(--pearl)">${ico}</div>
       <div class="rcard-body">
-        <div class="rcard-cat">${cat} ${meta.length ? '· '+meta.join(' · ') : ''}</div>
+        <div class="rcard-cat">${esc(cat)} ${meta.length?'· '+meta.join(' · '):''}</div>
         <div class="rcard-name">${esc(r.name||r.nome||'')}</div>
-        ${r.notes ? `<div class="rcard-desc">${esc(r.notes)}</div>` : ''}
-      </div><span class="rcard-arr">›</span></div>`;
+        ${r.notes?`<div class="rcard-desc">${esc(r.notes)}</div>`:''}
+      </div><div class="rcard-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>`;
   }).join('');
 }
-
 function openAddRc() {
-  document.getElementById('rc_id').value = '';
-  document.getElementById('rcShTtl').textContent = 'Nuova Ricetta';
-  ['rc_nome','rc_ings','rc_proc','rc_note','rc_tags','rc_src'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('rc_cat').value = '🍝 Primi';
-  document.getElementById('rc_dif').value = 'Media';
-  document.getElementById('rc_prep').value = 30;
-  document.getElementById('rc_cook').value = 30;
-  document.getElementById('rc_srv').value = 4;
-  document.getElementById('rc_delBtn').style.display = 'none';
-  openSh('rc');
+  document.getElementById('rc_id').value=''; document.getElementById('rcShTtl').textContent='Nuova Ricetta';
+  ['rc_nome','rc_ings','rc_proc','rc_note','rc_tags','rc_src'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rc_cat').value='🍝 Primi'; document.getElementById('rc_dif').value='Media';
+  document.getElementById('rc_prep').value=30; document.getElementById('rc_cook').value=30; document.getElementById('rc_srv').value=4;
+  document.getElementById('rc_delBtn').style.display='none'; openSh('rc');
 }
-
 function openEditRc(id) {
-  const r = D.ricettario.find(x => x.id === id); if (!r) return;
-  document.getElementById('rc_id').value = id;
-  document.getElementById('rcShTtl').textContent = 'Modifica · ' + (r.name||r.nome||'');
-  document.getElementById('rc_nome').value = r.name||r.nome||'';
-  document.getElementById('rc_cat').value = r.category||r.categoria||'🍝 Primi';
-  document.getElementById('rc_dif').value = r.difficulty||'Media';
-  document.getElementById('rc_prep').value = r.prep||0;
-  document.getElementById('rc_cook').value = r.cook||0;
-  document.getElementById('rc_srv').value = r.servings||4;
-  document.getElementById('rc_ings').value = (r.ingredients||[]).join('\n');
-  document.getElementById('rc_proc').value = (r.steps||[]).map(s => typeof s === 'object' ? s.text : s).join('\n');
-  document.getElementById('rc_note').value = r.notes||'';
-  document.getElementById('rc_tags').value = (r.tags||[]).join(', ');
-  document.getElementById('rc_src').value = r.sourceUrl||'';
-  document.getElementById('rc_delBtn').style.display = 'block';
-  openSh('rc');
+  const r=D.ricettario.find(x=>x.id===id); if (!r) return;
+  document.getElementById('rc_id').value=id; document.getElementById('rcShTtl').textContent='Modifica · '+(r.name||r.nome||'');
+  document.getElementById('rc_nome').value=r.name||r.nome||''; document.getElementById('rc_cat').value=r.category||r.categoria||'🍝 Primi';
+  document.getElementById('rc_dif').value=r.difficulty||'Media'; document.getElementById('rc_prep').value=r.prep||0;
+  document.getElementById('rc_cook').value=r.cook||0; document.getElementById('rc_srv').value=r.servings||4;
+  document.getElementById('rc_ings').value=(r.ingredients||[]).join('\n');
+  document.getElementById('rc_proc').value=(r.steps||[]).map(s=>typeof s==='object'?s.text:s).join('\n');
+  document.getElementById('rc_note').value=r.notes||''; document.getElementById('rc_tags').value=(r.tags||[]).join(', ');
+  document.getElementById('rc_src').value=r.sourceUrl||''; document.getElementById('rc_delBtn').style.display='block'; openSh('rc');
 }
-
 async function saveRc() {
-  const nome = document.getElementById('rc_nome').value.trim();
-  if (!nome) { toast('Nome obbligatorio'); return; }
-  const cat = document.getElementById('rc_cat').value;
-  const existId = document.getElementById('rc_id').value;
-  const isEdit = !!existId;
-  const id = existId || genId();
-  const orig = isEdit ? (D.ricettario.find(x => x.id === id) || {}) : {};
-  const r = {
-    id, name: nome, category: cat, emoji: RC_ICO[cat]||'🍽️',
-    difficulty: document.getElementById('rc_dif').value,
-    prep: parseInt(document.getElementById('rc_prep').value)||0,
-    cook: parseInt(document.getElementById('rc_cook').value)||0,
-    servings: parseInt(document.getElementById('rc_srv').value)||4,
-    ingredients: document.getElementById('rc_ings').value.split('\n').filter(Boolean),
-    steps: document.getElementById('rc_proc').value.split('\n').filter(Boolean).map(t => ({ text:t, ingredients:[] })),
-    notes: document.getElementById('rc_note').value.trim(),
-    tags: document.getElementById('rc_tags').value.split(',').map(s => s.trim()).filter(Boolean),
-    sourceUrl: document.getElementById('rc_src').value.trim(),
-    createdAt: orig.createdAt || Date.now()
-  };
-  if (isEdit) { const i = D.ricettario.findIndex(x => x.id === id); D.ricettario[i] = r; gasPost('update','ricettario',r,id); }
+  const nome=document.getElementById('rc_nome').value.trim(); if (!nome) { toast('Nome obbligatorio'); return; }
+  const cat=document.getElementById('rc_cat').value; const existId=document.getElementById('rc_id').value; const isEdit=!!existId; const id=existId||genId();
+  const orig=isEdit?(D.ricettario.find(x=>x.id===id)||{}):{};
+  const r={id,name:nome,category:cat,emoji:RC_ICO[cat]||'🍽️',difficulty:document.getElementById('rc_dif').value,prep:parseInt(document.getElementById('rc_prep').value)||0,cook:parseInt(document.getElementById('rc_cook').value)||0,servings:parseInt(document.getElementById('rc_srv').value)||4,ingredients:document.getElementById('rc_ings').value.split('\n').filter(Boolean),steps:document.getElementById('rc_proc').value.split('\n').filter(Boolean).map(t=>({text:t,ingredients:[]})),notes:document.getElementById('rc_note').value.trim(),tags:document.getElementById('rc_tags').value.split(',').map(s=>s.trim()).filter(Boolean),sourceUrl:document.getElementById('rc_src').value.trim(),createdAt:orig.createdAt||Date.now()};
+  if (isEdit) { const i=D.ricettario.findIndex(x=>x.id===id); D.ricettario[i]=r; gasPost('update','ricettario',r,id); }
   else { D.ricettario.unshift(r); gasPost('add','ricettario',r); }
-  saveLocal(); closeSh('rc'); renderRc(); updCounts();
-  toast(isEdit ? 'Aggiornata' : 'Archiviata');
+  saveLocal(); closeSh('rc'); renderRc(); updCounts(); toast(isEdit?'Aggiornata':'Archiviata');
 }
-
 async function delRc() {
-  const id = document.getElementById('rc_id').value;
-  if (!id || !confirm('Eliminare?')) return;
-  D.ricettario = D.ricettario.filter(x => x.id !== id);
-  saveLocal(); gasPost('delete','ricettario',null,id);
+  const id=document.getElementById('rc_id').value; if (!id||!confirm('Eliminare?')) return;
+  D.ricettario=D.ricettario.filter(x=>x.id!==id); saveLocal(); gasPost('delete','ricettario',null,id);
   closeSh('rc'); renderRc(); updCounts(); toast('Eliminata');
 }
 
 // ═══════════════════════════════════════════════════
 //  DETAIL
 // ═══════════════════════════════════════════════════
-const SEC_KEYS = { md:'medolce', gf:'gastronomia', rc:'ricettario' };
-const SEC_LABELS = { md:"M'è dolce", gf:'Gastronomia di Frontiera', rc:'Ricettario' };
-
 function openDet(id, sec) {
-  const key = SEC_KEYS[sec];
-  const r = D[key].find(x => x.id === id); if (!r) return;
-  document.getElementById('detLabel').textContent = SEC_LABELS[sec];
-  document.getElementById('detBody').innerHTML = buildDet(r, sec);
+  const key=SEC_KEYS[sec]; const r=D[key].find(x=>x.id===id); if (!r) return;
+  document.getElementById('detLabel').textContent=SEC_LABELS[sec];
+  const ings=r.ingredienti||r.ingredients||[];
+  const proc=r.procedimento||r.steps||[];
+  const note=r.note||r.notes||'';
+  const steps=proc.map(s=>typeof s==='object'?s.text:s);
+  let ingsHtml='';
+  if (ings.length) {
+    if (typeof ings[0]==='string') ingsHtml=ings.map(i=>`<li class="det-ing-li"><span>${esc(i)}</span></li>`).join('');
+    else ingsHtml=ings.map(i=>`<li class="det-ing-li"><span>${esc(i.nome||String(i))}</span><span class="det-ing-qty">${i.peso?i.peso+'g':''}${i.pct?' ('+i.pct+'%)':''}</span></li>`).join('');
+  }
+  const stepsHtml=steps.map((s,i)=>`<div class="det-step"><span class="det-step-n">${i+1}</span><span class="det-step-t">${esc(s)}</span></div>`).join('');
+
+  let heroExtra='';
+  if (sec==='md'&&r.citazione) heroExtra=`<div class="det-cit">${esc(r.citazione)}</div>`;
+
+  let extraAfterIng='';
+  if (sec==='md') {
+    if (r.musica) extraAfterIng+=`<div class="det-music"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>${esc(r.musica)}</div>`;
+    if (r.audioUrl) extraAfterIng+=`<div style="padding:.3rem 1.25rem .5rem;display:flex;align-items:center;gap:.8rem"><div>${makeQR(r.audioUrl)}</div><div style="font-size:.68rem;color:var(--fog);font-family:var(--font-body);font-style:italic;line-height:1.5">Inquadra il QR code<br>per ascoltare il brano</div></div>`;
+    if (r.abbinamento) extraAfterIng+=`<div class="det-body"><div class="det-sec-lbl">Abbinamento</div><div class="det-note">${esc(r.abbinamento)}</div></div>`;
+    if (r.codice||r.fonte) extraAfterIng+=`<div style="padding:0 1.25rem .3rem;font-size:.58rem;color:var(--mist)">${[r.codice?'Cod: '+r.codice:'',r.fonte?'Fonte: '+r.fonte:''].filter(Boolean).join(' · ')}</div>`;
+  }
+  if (sec==='gf') {
+    const tags=[]; if(r.regione)tags.push(r.regione); if(r.tecnica)tags.push(r.tecnica); if(r.stagione)tags.push(r.stagione);
+    if (tags.length) extraAfterIng+=`<div class="det-body"><div class="det-tag-row">${tags.map(t=>`<span class="det-tag">${t}</span>`).join('')}</div></div>`;
+    if (r.abbinamento||r.produttore) extraAfterIng+=`<div class="det-body"><div class="det-sec-lbl">Abbinamento vino</div><div class="det-note">${esc(r.abbinamento||'')}${r.produttore?`<br><span style="font-size:.75rem;color:var(--steel)">${esc(r.produttore)}</span>`:''}</div></div>`;
+    if (r.ristorante) extraAfterIng+=`<div class="det-body"><div class="det-sec-lbl">Luogo ispirazione</div><div class="det-note">${esc(r.ristorante)}</div></div>`;
+  }
+  if (sec==='rc') {
+    const meta=[]; if(r.difficulty)meta.push(r.difficulty); const tot=(r.prep||0)+(r.cook||0); if(tot)meta.push('⏱ '+tot+'min'); if(r.servings)meta.push('👥 '+r.servings+' porz.');
+    if (meta.length) heroExtra+=`<div style="font-size:.6rem;color:rgba(255,255,255,.5);margin-top:.4rem;letter-spacing:.08em">${meta.join(' · ')}</div>`;
+    if ((r.tags||[]).length) extraAfterIng+=`<div class="det-body"><div class="det-tag-row">${r.tags.map(t=>`<span class="det-tag">${t}</span>`).join('')}</div></div>`;
+    if (r.sourceUrl) extraAfterIng+=`<div style="padding:0 1.25rem .3rem"><a href="${r.sourceUrl}" target="_blank" style="font-size:.72rem;color:var(--steel);border-bottom:1px solid">Fonte →</a></div>`;
+  }
+
+  const editFn=sec==='md'?'openEditMd':sec==='gf'?'openEditGf':'openEditRc';
+  const ds=r.dataCreazione||r.createdAt;
+  const nome=r.nome||r.name||'—';
+  const desc=r.descrizione||'';
+  const sub=(sec==='md'&&r.categoria&&MD_SUBS[r.categoria]&&r.sottocategoria)?r.categoria+' · '+MD_SUBS[r.categoria][r.sottocategoria]:(r.categoria?SEC_LABELS[sec]+' · '+r.categoria:SEC_LABELS[sec]);
+
+  document.getElementById('detBody').innerHTML = `
+    <div class="det-hero">
+      <div class="det-hero-sub">${esc(sub)}</div>
+      <div class="det-ttl">${esc(nome)}</div>
+      ${desc?`<div class="det-desc">${esc(desc)}</div>`:''}
+      ${heroExtra}
+    </div>
+    ${extraAfterIng}
+    ${ingsHtml?`<div class="det-body"><div class="det-sec-lbl">Ingredienti</div><ul class="det-ing-list">${ingsHtml}</ul></div>`:''}
+    ${stepsHtml?`<div class="det-body"><div class="det-sec-lbl">Procedimento</div>${stepsHtml}</div>`:''}
+    ${note?`<div class="det-body"><div class="det-sec-lbl">Note</div><div class="det-note">${esc(note)}</div></div>`:''}
+    <div class="det-body">
+      <div class="det-acts">
+        <button class="det-btn" onclick="closeSh('det');${editFn}('${r.id}')">✏ Modifica</button>
+        <button class="det-btn danger" onclick="delFromDet('${r.id}','${sec}')">🗑 Elimina</button>
+      </div>
+      ${ds?`<div style="font-size:.56rem;color:var(--mist);margin-top:.7rem;text-align:center">${new Date(ds).toLocaleDateString('it-IT')}</div>`:''}
+    </div>`;
   openSh('det');
 }
 
-function buildDet(r, sec) {
-  const nome = r.nome || r.name || '—';
-  const ings = r.ingredienti || r.ingredients || [];
-  const proc = r.procedimento || r.steps || [];
-  const note = r.note || r.notes || '';
-  const steps = proc.map(s => typeof s === 'object' ? s.text : s);
-
-  let ingsHtml = '';
-  if (ings.length) {
-    if (typeof ings[0] === 'string')
-      ingsHtml = ings.map(i => `<li class="d-ing-li"><span>${esc(i)}</span></li>`).join('');
-    else
-      ingsHtml = ings.map(i => `<li class="d-ing-li"><span>${esc(i.nome||String(i))}</span><span class="d-ing-qty">${i.peso?i.peso+'g':''}${i.pct?' ('+i.pct+'%)':''}</span></li>`).join('');
-  }
-  const stepsHtml = steps.map((s,i) => `<div class="d-step"><span class="d-step-n">${i+1}</span><span class="d-step-t">${esc(s)}</span></div>`).join('');
-
-  let extra = '';
-  if (sec === 'md') {
-    if (r.musica) extra += `<div class="d-music">🎵 ${esc(r.musica)}</div>`;
-    if (r.citazione) extra += `<div class="d-sec-lbl">📜 Citazione leopardiana</div><div class="d-cit">${esc(r.citazione)}</div>`;
-    if (r.abbinamento) extra += `<div class="d-sec-lbl">🍷 Abbinamento</div><div class="d-note-box">${esc(r.abbinamento)}</div>`;
-    const codFonte = [r.codice ? 'Codice: '+r.codice : '', r.fonte ? 'Fonte: '+r.fonte : ''].filter(Boolean).join(' · ');
-    if (codFonte) extra += `<div style="font-size:.6rem;color:var(--muted);margin-top:.5rem">${codFonte}</div>`;
-  }
-  if (sec === 'gf') {
-    const tags = [];
-    if (r.tecnica) tags.push('⚗️ '+r.tecnica);
-    if (r.stagione) tags.push('🍂 '+r.stagione);
-    if (r.difficolta) tags.push(r.difficolta);
-    if (tags.length) extra += `<div class="d-sec-lbl">Tecnica & Stagione</div><div class="d-tag-row">${tags.map(t=>`<span class="d-tag">${t}</span>`).join('')}</div>`;
-    if (r.ispirazione) extra += `<div class="d-sec-lbl">🗺 Ispirazione & Territorio</div><div class="d-note-box">${esc(r.ispirazione)}</div>`;
-    if (r.abbinamento) extra += `<div class="d-sec-lbl">🍷 Abbinamento</div><div class="d-note-box">${esc(r.abbinamento)}</div>`;
-    if (r.fonte) extra += `<div style="font-size:.6rem;color:var(--muted);margin-top:.4rem">Fonte: ${esc(r.fonte)}</div>`;
-  }
-  if (sec === 'rc') {
-    const meta = [];
-    if (r.difficulty) meta.push(r.difficulty);
-    if ((r.prep||0)+(r.cook||0)) meta.push('⏱ '+((r.prep||0)+(r.cook||0))+'min');
-    if (r.servings) meta.push('👥 '+r.servings+' porzioni');
-    if (meta.length) extra = `<div class="d-meta-s">${meta.join(' · ')}</div>` + extra;
-    if ((r.tags||[]).length) extra += `<div class="d-tag-row">${r.tags.map(t=>`<span class="d-tag">${t}</span>`).join('')}</div>`;
-    if (r.sourceUrl) extra += `<div style="margin-top:.4rem"><a href="${r.sourceUrl}" target="_blank" style="font-size:.72rem;color:var(--ink);border-bottom:1px solid">Fonte →</a></div>`;
-  }
-
-  const editFn = sec === 'md' ? 'openEditMd' : sec === 'gf' ? 'openEditGf' : 'openEditRc';
-  const ds = r.dataCreazione || r.createdAt;
-
-  return `
-    <div class="d-title">${esc(nome)}</div>
-    ${r.descrizione ? `<div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.92rem;color:var(--muted);margin-bottom:.6rem;line-height:1.55">${esc(r.descrizione)}</div>` : ''}
-    ${extra}
-    ${ingsHtml ? `<div class="d-sec-lbl">⚗️ Ingredienti</div><ul class="d-ing-list">${ingsHtml}</ul>` : ''}
-    ${stepsHtml ? `<div class="d-sec-lbl">📋 Procedimento</div>${stepsHtml}` : ''}
-    ${note ? `<div class="d-sec-lbl">📝 Note</div><div class="d-note-box">${esc(note)}</div>` : ''}
-    <div class="d-acts">
-      <button class="d-btn" onclick="closeSh('det');${editFn}('${r.id}')">✏️ Modifica</button>
-      <button class="d-btn danger" onclick="delFromDet('${r.id}','${sec}')">🗑️ Elimina</button>
-    </div>
-    ${ds ? `<div style="font-size:.58rem;color:var(--muted);margin-top:.8rem;text-align:center">${new Date(ds).toLocaleDateString('it-IT')}</div>` : ''}`;
-}
-
-async function delFromDet(id, sec) {
+async function delFromDet(id,sec) {
   if (!confirm('Eliminare questa ricetta?')) return;
-  const key = SEC_KEYS[sec];
-  D[key] = D[key].filter(x => x.id !== id);
-  saveLocal(); gasPost('delete', key, null, id);
-  closeSh('det');
-  if (sec === 'md') renderMd(); else if (sec === 'gf') renderGf(); else renderRc();
+  const key=SEC_KEYS[sec]; D[key]=D[key].filter(x=>x.id!==id);
+  saveLocal(); gasPost('delete',key,null,id); closeSh('det');
+  if(sec==='md')renderMd(); else if(sec==='gf')renderGf(); else renderRc();
   updCounts(); toast('Ricetta eliminata');
 }
 
 // ═══════════════════════════════════════════════════
 //  SEARCH
 // ═══════════════════════════════════════════════════
-let srchOpen = false;
+let srchOpen=false;
 function toggleSearch() {
-  srchOpen = !srchOpen;
-  document.getElementById('srchBar').classList.toggle('open', srchOpen);
-  document.getElementById('srchBtn').classList.toggle('on', srchOpen);
-  if (srchOpen) document.getElementById('srchInput').focus();
+  srchOpen=!srchOpen;
+  document.getElementById('srchBar').classList.toggle('open',srchOpen);
+  document.getElementById('srchBtn').classList.toggle('on',srchOpen);
+  if (srchOpen) document.getElementById('srchIn').focus();
   else clearSearch();
 }
-function clearSearch() {
-  document.getElementById('srchInput').value = '';
-  document.getElementById('srchResults').innerHTML = '';
-}
+function clearSearch() { document.getElementById('srchIn').value=''; document.getElementById('srchRes').innerHTML=''; }
 function doSearch() {
-  const q = document.getElementById('srchInput').value.toLowerCase().trim();
-  const res = document.getElementById('srchResults');
-  if (!q) { res.innerHTML = ''; return; }
-  const matches = [];
-  [['md','medolce'],['gf','gastronomia'],['rc','ricettario']].forEach(([sec,key]) => {
-    D[key].forEach(r => {
-      const nm = (r.nome||r.name||'').toLowerCase();
-      const ds = (r.descrizione||r.notes||'').toLowerCase();
-      if (nm.includes(q) || ds.includes(q)) matches.push({r, sec});
+  const q=document.getElementById('srchIn').value.toLowerCase().trim();
+  const res=document.getElementById('srchRes');
+  if (!q) { res.innerHTML=''; return; }
+  const matches=[];
+  [['md','medolce'],['gf','gastronomia'],['rc','ricettario']].forEach(([sec,key])=>{
+    D[key].forEach(r=>{
+      const nm=(r.nome||r.name||'').toLowerCase();
+      const ds=(r.descrizione||r.notes||'').toLowerCase();
+      if (nm.includes(q)||ds.includes(q)) matches.push({r,sec});
     });
   });
-  if (!matches.length) { res.innerHTML = `<div class="srch-item" style="cursor:default"><span class="srch-sec">Nessun risultato</span></div>`; return; }
-  const ico = (r,sec) => sec==='md'?(r.categoria==='A'?'🍫':r.categoria==='B'?'🎂':'🌿'):sec==='gf'?(GF_ICO[r.categoria]||'🌿'):(r.emoji||RC_ICO[r.category]||'🍽️');
-  res.innerHTML = matches.slice(0,10).map(({r,sec}) => `
-    <div class="srch-item" onclick="goView('${sec}');toggleSearch();setTimeout(()=>openDet('${r.id}','${sec}'),320)">
-      <div class="srch-ico">${ico(r,sec)}</div>
-      <div><div class="srch-name">${esc(r.nome||r.name||'')}</div><div class="srch-sec">${SEC_LABELS[sec]}</div></div>
-    </div>`).join('');
+  // Also search luoghi
+  D.luoghi.forEach(l=>{ if((l.nome||'').toLowerCase().includes(q)||(l.desc||'').toLowerCase().includes(q)) matches.push({r:l,sec:'luogo'}); });
+  if (!matches.length) { res.innerHTML=`<div class="srch-item" style="cursor:default;opacity:.5"><div class="srch-item-name">Nessun risultato</div></div>`; return; }
+  res.innerHTML=matches.slice(0,10).map(({r,sec})=>{
+    const name=r.nome||r.name||'';
+    const secLabel={md:"M'è dolce",gf:'Gastronomia',rc:'Ricettario',luogo:'Luogo'}[sec];
+    const ico=sec==='md'?'<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--navy2);fill:none;stroke-width:1.3;stroke-linecap:round"><path d="M12 3c-2 0-5 2-5 6s2 8 5 10c3-2 5-6 5-10s-3-6-5-6z"/><path d="M12 3v16"/><path d="M7 9h10"/></svg>':sec==='gf'?'<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:var(--navy2);fill:none;stroke-width:1.3;stroke-linecap:round"><path d="M3 2v7c0 1.7 1.3 3 3 3s3-1.3 3-3V2"/><line x1="6" y1="2" x2="6" y2="22"/></svg>':sec==='luogo'?'📍':'📖';
+    const action=sec==='luogo'?'openEditLuogo':'openDet';
+    const args=sec==='luogo'?`'${r.id}'`:`'${r.id}','${sec}'`;
+    return `<div class="srch-item" onclick="toggleSearch();setTimeout(()=>{${sec!=='luogo'?`goView('${sec}');`:''}${action}(${args})},320)">
+      <div class="srch-item-ico">${ico}</div>
+      <div><div class="srch-item-name">${esc(name)}</div><div class="srch-item-sec">${secLabel}</div></div>
+    </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════
 //  SETTINGS
 // ═══════════════════════════════════════════════════
 async function saveGasUrl() {
-  GAS_URL = document.getElementById('gasUrlIn').value.trim();
-  localStorage.setItem(GAS_KEY, GAS_URL);
-  const dot  = document.getElementById('gasDot');
-  const stat = document.getElementById('gasStat');
+  GAS_URL=document.getElementById('gasUrlIn').value.trim();
+  localStorage.setItem(GAS_KEY,GAS_URL);
+  const dot=document.getElementById('gasDot'), stat=document.getElementById('gasStat');
   if (!GAS_URL) { dot.className='sdot'; stat.textContent='Non configurato · modalità locale'; return; }
-  stat.textContent = 'Test connessione in corso...';
-  dot.className = 'sdot';
-  const result = await gasGet('ricettario');
-  if (result !== null) {
-    dot.className = 'sdot ok';
-    stat.textContent = 'Connesso · Google Sheets attivo';
-    toast('Backend collegato correttamente');
-  } else {
-    dot.className = 'sdot err';
-    stat.textContent = 'Errore · Verificare URL e permessi Apps Script';
-  }
+  stat.textContent='Test connessione in corso...'; dot.className='sdot';
+  const r=await gasGet('ricettario');
+  if (r!==null) { dot.className='sdot ok'; stat.textContent='Connesso · Google Sheets attivo'; toast('Backend collegato'); }
+  else { dot.className='sdot err'; stat.textContent='Errore · Verificare URL e permessi'; }
 }
-
 function initGasStatus() {
-  const inp = document.getElementById('gasUrlIn');
-  if (GAS_URL) inp.value = GAS_URL;
-  const dot  = document.getElementById('gasDot');
-  const stat = document.getElementById('gasStat');
-  if (GAS_URL) { dot.className='sdot ok'; stat.textContent='URL configurato · in attesa di verifica'; }
+  if (GAS_URL) { document.getElementById('gasUrlIn').value=GAS_URL; document.getElementById('gasDot').className='sdot ok'; document.getElementById('gasStat').textContent='URL configurato'; }
 }
-
-// ═══════════════════════════════════════════════════
-//  MIGRAZIONE vecchia app
-// ═══════════════════════════════════════════════════
 async function migrateOld() {
   try {
-    const old = JSON.parse(localStorage.getItem(OLD_KEY) || '[]');
-    if (!old.length) { toast('Nessuna ricetta trovata in rfam_v3'); return; }
-    const existing = new Set(D.ricettario.map(r => r.id));
-    const toAdd = old.filter(r => !existing.has(r.id));
-    if (!toAdd.length) { toast('Tutte le ricette già importate'); return; }
-    D.ricettario = [...D.ricettario, ...toAdd];
-    saveLocal();
-    if (GAS_URL) gasPost('add', 'ricettario', { _bulk: toAdd });
-    renderRc(); updCounts();
-    toast(`✓ Importate ${toAdd.length} ricette`);
-    closeSh('set');
-    goView('rc');
-  } catch(e) { toast('Errore importazione: ' + e.message); }
+    const old=JSON.parse(localStorage.getItem(OLD_KEY)||'[]');
+    if (!old.length) { toast('Nessuna ricetta in rfam_v3'); return; }
+    const existing=new Set(D.ricettario.map(r=>r.id));
+    const toAdd=old.filter(r=>!existing.has(r.id));
+    if (!toAdd.length) { toast('Già importate'); return; }
+    D.ricettario=[...D.ricettario,...toAdd]; saveLocal();
+    renderRc(); updCounts(); toast('✓ Importate '+toAdd.length+' ricette'); closeSh('set'); goView('rc');
+  } catch(e) { toast('Errore: '+e.message); }
 }
-
-// ═══════════════════════════════════════════════════
-//  BACKUP JSON
-// ═══════════════════════════════════════════════════
 function exportJSON() {
-  const blob = new Blob([JSON.stringify(D, null, 2)], { type:'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'atelier-straccini-backup-' + new Date().toISOString().slice(0,10) + '.json';
-  a.click();
+  const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='atelier-straccini-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
 }
 function importJSON() { document.getElementById('importFile').click(); }
 function doImport(evt) {
-  const file = evt.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
+  const file=evt.target.files[0]; if (!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
     try {
-      const data = JSON.parse(e.target.result);
-      ['medolce','gastronomia','ricettario','notizie'].forEach(k => {
-        if (Array.isArray(data[k])) D[k] = data[k];
-      });
+      const data=JSON.parse(e.target.result);
+      ['medolce','gastronomia','ricettario','notizie','luoghi'].forEach(k=>{if(Array.isArray(data[k]))D[k]=data[k];});
       saveLocal(); renderHome(); toast('Backup importato');
-    } catch(err) { toast('File JSON non valido'); }
+    } catch { toast('File JSON non valido'); }
   };
-  reader.readAsText(file);
-  evt.target.value = '';
+  reader.readAsText(file); evt.target.value='';
 }
 
 // ═══════════════════════════════════════════════════
-//  SHEET HELPERS
+//  SHEET UTILS
 // ═══════════════════════════════════════════════════
 function openSh(id) {
-  document.getElementById(id+'Ov').style.display = 'block';
-  requestAnimationFrame(() => document.getElementById(id+'Sh').classList.add('op'));
+  document.getElementById(id+'Ov').style.display='block';
+  requestAnimationFrame(()=>document.getElementById(id+'Sh').classList.add('op'));
 }
 function closeSh(id) {
   document.getElementById(id+'Sh').classList.remove('op');
-  setTimeout(() => document.getElementById(id+'Ov').style.display = 'none', 350);
+  setTimeout(()=>document.getElementById(id+'Ov').style.display='none',360);
 }
 
 // ═══════════════════════════════════════════════════
-//  TOAST + UTILS
+//  TOAST
 // ═══════════════════════════════════════════════════
-let _toastT;
+let _tt;
 function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('on');
-  clearTimeout(_toastT);
-  _toastT = setTimeout(() => el.classList.remove('on'), 2800);
-}
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('on');
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('on'),2800);
 }
 
-// ESC key
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') ['md','gf','rc','news','det','set'].forEach(id => closeSh(id));
+// ESC
+document.addEventListener('keydown',e=>{
+  if (e.key==='Escape') ['md','gf','rc','news','det','set','luogo'].forEach(id=>closeSh(id));
 });
 
 // ═══════════════════════════════════════════════════
@@ -1236,7 +1777,6 @@ function init() {
   initGasStatus();
   renderHome();
 }
-
 init();
 </script>
 </body>
