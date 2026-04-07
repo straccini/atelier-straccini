@@ -1100,6 +1100,12 @@ body {
       <button class="btn-tool" onclick="document.getElementById('importFile').click()">⬆ Importa JSON</button>
     </div>
     <input type="file" id="importFile" style="display:none" accept=".json" onchange="doImport(event)">
+    <div class="set-sep">Sincronizzazione Cloud</div>
+    <div class="set-row">
+      <div class="set-lbl">Carica tutto su Google Sheets</div>
+      <div class="set-sub">Invia tutti i dati locali al backend cloud — necessario la prima volta o dopo un'importazione JSON.</div>
+      <button class="btn-mig" style="background:var(--navy);color:var(--white);border-color:var(--navy)" onclick="gasBulkSync()">☁ Sincronizza tutto su Sheets</button>
+    </div>
     <div class="set-sep">Guida Apps Script</div>
     <div class="set-guide">
       <p>1. <a href="https://script.google.com" target="_blank">script.google.com</a> → Nuovo progetto → incolla <strong>Code.gs</strong></p>
@@ -1161,12 +1167,43 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 // ═══════════════════════════════════════════════════
 async function gasGet(section) {
   if (!GAS_URL) return null;
-  try { const r = await fetch(GAS_URL+'?section='+section); const j = await r.json(); return j.ok ? j.data : null; }
-  catch(e) { return null; }
+  try {
+    const r = await fetch(GAS_URL+'?section='+section, {
+      method: 'GET', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    const j = await r.json();
+    return j.ok ? j.data : null;
+  } catch(e) { console.warn('GAS GET error:', e); return null; }
 }
 async function gasPost(action, section, data, id) {
   if (!GAS_URL) return;
-  try { await fetch(GAS_URL, { method:'POST', body: JSON.stringify({action,section,data,id}), headers:{'Content-Type':'text/plain'} }); } catch(e) {}
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST', redirect: 'follow',
+      body: JSON.stringify({action,section,data,id}),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  } catch(e) { console.warn('GAS POST error:', e); }
+}
+async function gasBulkSync() {
+  if (!GAS_URL) { toast('Configura prima il backend nelle Impostazioni'); return; }
+  toast('Sincronizzazione in corso...');
+  const secs = [['medolce','medolce'],['gastronomia','gastronomia'],['ricettario','ricettario'],['notizie','notizie'],['luoghi','luoghi']];
+  let tot = 0;
+  for (const [key,sec] of secs) {
+    if (D[key] && D[key].length > 0) {
+      try {
+        await fetch(GAS_URL, {
+          method:'POST', redirect:'follow',
+          body: JSON.stringify({action:'bulkAdd', section:sec, data:D[key]}),
+          headers:{'Content-Type':'text/plain'}
+        });
+        tot += D[key].length;
+      } catch(e) { console.warn('Bulk sync error '+sec, e); }
+    }
+  }
+  toast('✓ Sincronizzate '+tot+' voci su Google Sheets');
 }
 async function syncSection(key) {
   const r = await gasGet(key);
@@ -1705,9 +1742,14 @@ async function saveGasUrl() {
   const dot=document.getElementById('gasDot'), stat=document.getElementById('gasStat');
   if (!GAS_URL) { dot.className='sdot'; stat.textContent='Non configurato · modalità locale'; return; }
   stat.textContent='Test connessione in corso...'; dot.className='sdot';
-  const r=await gasGet('ricettario');
-  if (r!==null) { dot.className='sdot ok'; stat.textContent='Connesso · Google Sheets attivo'; toast('Backend collegato'); }
-  else { dot.className='sdot err'; stat.textContent='Errore · Verificare URL e permessi'; }
+  try {
+    const resp = await fetch(GAS_URL, { method:'GET', redirect:'follow', headers:{'Content-Type':'text/plain'} });
+    const j = await resp.json();
+    if (j.ok) { dot.className='sdot ok'; stat.textContent='Connesso · Google Sheets attivo ✓'; toast('Backend collegato ✓'); }
+    else { dot.className='sdot err'; stat.textContent='Errore risposta: '+j.error; }
+  } catch(e) {
+    dot.className='sdot err'; stat.textContent='Errore connessione: '+e.message;
+  }
 }
 function initGasStatus() {
   if (GAS_URL) { document.getElementById('gasUrlIn').value=GAS_URL; document.getElementById('gasDot').className='sdot ok'; document.getElementById('gasStat').textContent='URL configurato'; }
