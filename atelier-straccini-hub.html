@@ -733,8 +733,12 @@ async function gasGet(section){
 
 async function gasPost(action,section,data,id){
   if(!GAS_URL)return;
+  // Usa no-cors: il browser non blocca il POST verso GAS
+  // Non possiamo leggere la risposta ma la scrittura avviene
   try{
-    await fetch(GAS_URL,{method:'POST',redirect:'follow',
+    fetch(GAS_URL,{
+      method:'POST',
+      mode:'no-cors',
       body:JSON.stringify({action,section,data,id}),
       headers:{'Content-Type':'text/plain'}
     });
@@ -771,7 +775,9 @@ async function gasBulkSync(){
   for(const[key,sec]of secs){
     if(D[key]&&D[key].length>0){
       try{
-        await fetch(GAS_URL,{method:'POST',redirect:'follow',
+        fetch(GAS_URL,{
+          method:'POST',
+          mode:'no-cors',
           body:JSON.stringify({action:'bulkAdd',section:sec,data:D[key]}),
           headers:{'Content-Type':'text/plain'}
         });
