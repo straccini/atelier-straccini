@@ -288,9 +288,62 @@ body{background:var(--white);color:var(--navy);font-family:var(--font-u);min-hei
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .spin{width:16px;height:16px;border:1.5px solid var(--silver);border-top-color:var(--navy);border-radius:50%;animation:rot .7s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
+
+/* AUTH */
+#authScreen{position:fixed;inset:0;background:var(--white);z-index:500;display:flex;align-items:center;justify-content:center;padding:2rem}
+.auth-box{max-width:340px;width:100%;text-align:center}
+.auth-logo{font-family:var(--font-d);font-size:1.6rem;font-weight:400;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.25rem}
+.auth-logo em{font-style:italic;color:var(--steel)}
+.auth-sub{font-size:.6rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--fog);margin-bottom:2rem}
+.auth-label{font-size:.6rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--fog);display:block;text-align:left;margin-bottom:.3rem}
+.auth-input{width:100%;border:1px solid var(--silver);background:var(--white);padding:.55rem .7rem;font-family:var(--font-u);font-size:.9rem;color:var(--navy);outline:none;border-radius:0;transition:border-color .18s;margin-bottom:.7rem}
+.auth-input:focus{border-color:var(--navy)}
+.auth-btn{width:100%;border:none;background:var(--navy);color:var(--white);font-family:var(--font-u);font-size:.72rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:.8rem;cursor:pointer;transition:opacity .18s;margin-bottom:.5rem}
+.auth-btn:hover{opacity:.85}
+.auth-btn-ghost{width:100%;border:1px solid var(--silver);background:transparent;color:var(--fog);font-family:var(--font-u);font-size:.7rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:.7rem;cursor:pointer;transition:all .18s}
+.auth-btn-ghost:hover{border-color:var(--navy);color:var(--navy)}
+.auth-err{font-size:.72rem;color:#b03030;margin:.3rem 0;min-height:1rem}
+.auth-note{font-size:.62rem;color:var(--mist);margin-top:1.2rem;line-height:1.6}
+.role-chip{display:inline-flex;align-items:center;gap:.4rem;font-size:.58rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:.22rem .65rem;border-radius:2px}
+.role-chip.admin{background:#EAF3DE;color:#27500A}
+.role-chip.editor{background:#E6F1FB;color:#0C447C}
+.role-chip.reader{background:var(--pearl);color:var(--fog)}
+/* Users table in settings */
+.usr-row{display:flex;align-items:center;gap:.6rem;padding:.55rem 0;border-bottom:1px solid var(--pearl)}
+.usr-row:last-child{border-bottom:none}
+.usr-email{font-size:.8rem;flex:1;color:var(--navy2)}
+.usr-name{font-size:.7rem;color:var(--fog)}
+.usr-del{border:none;background:none;cursor:pointer;color:var(--mist);font-size:.7rem;padding:.2rem .4rem;transition:color .15s}
+.usr-del:hover{color:#b03030}
+
+/* AI WIZARD */
+.ai-panel{background:var(--pearl);border:1px solid var(--silver);padding:.85rem .95rem;margin-bottom:.75rem}
+.ai-panel .fl{color:var(--steel)}
+.ai-status{display:flex;align-items:center;gap:.7rem;padding:.55rem .7rem;border-radius:2px;font-size:.75rem;margin-top:.5rem}
+.ai-status.loading{background:#E6F1FB;color:#0C447C}
+.ai-status.ok{background:#EAF3DE;color:#27500A}
+.ai-status.err{background:#FCEBEB;color:#A32D2D}
+.ai-prev{border:1px solid var(--silver);padding:.75rem .9rem;margin-top:.5rem;background:var(--white)}
+.ai-prev-ttl{font-family:var(--font-d);font-size:1rem;font-style:italic;margin-bottom:.3rem}
+.ai-prev-meta{font-size:.65rem;color:var(--fog);margin-bottom:.5rem}
+.src-chip{display:inline-flex;align-items:center;gap:.35rem;font-size:.62rem;padding:.22rem .6rem;background:var(--pearl);border:1px solid var(--silver);color:var(--navy2);margin:.2rem .2rem 0 0;border-radius:2px}
 </style>
 </head>
 <body>
+<!-- AUTH SCREEN -->
+<div id="authScreen" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo">Atelier <em>Sinestetico</em></div>
+    <div class="auth-sub">Hub Gastronomico · Italia Centrale</div>
+    <label class="auth-label" for="authEmail">La tua email</label>
+    <input id="authEmail" class="auth-input" type="email" placeholder="nome@esempio.com" autocomplete="email">
+    <div class="auth-err" id="authErr"></div>
+    <button class="auth-btn" onclick="doLogin()">Accedi come editor</button>
+    <button class="auth-btn-ghost" onclick="continueAsReader()">Continua come lettore</button>
+    <div class="auth-note">Gli editor sono autorizzati dall'amministratore.<br>I lettori possono sfogliare tutti i contenuti.</div>
+  </div>
+</div>
+
 <div id="app">
 
 <!-- HEADER -->
@@ -300,6 +353,9 @@ body{background:var(--white);color:var(--navy);font-family:var(--font-u);min-hei
     <div class="hdr-tag" id="hdrTag">Hub Gastronomico · Italia Centrale</div>
   </div>
   <div class="sync-dot" id="syncDot" title="Stato sincronizzazione"></div>
+  <div id="roleChipWrap" style="display:none">
+    <span class="role-chip" id="roleChip"></span>
+  </div>
   <div class="hdr-acts">
     <button class="hbtn" id="srchBtn" onclick="toggleSearch()">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.5-4.5"/></svg>
@@ -352,7 +408,10 @@ body{background:var(--white);color:var(--navy);font-family:var(--font-u);min-hei
 <div class="view" id="vMd">
   <div class="sec-top">
     <div><div class="sec-ttl">M'è dolce</div><div class="sec-sub">Cioccolateria & Micro Pasticceria · Recanati</div></div>
-    <button class="btn-add md" onclick="openAddMd()">+ Ricetta</button>
+    <div style="display:flex;gap:.4rem">
+      <button class="btn-add md" style="opacity:.85" onclick="openAiMd()">✦ AI</button>
+      <button class="btn-add md" onclick="openAddMd()">+ Ricetta</button>
+    </div>
   </div>
   <div class="ftabs" id="tabsMd">
     <button class="ftab on" onclick="filtTab('md','all',this)">Tutte</button>
@@ -418,7 +477,11 @@ body{background:var(--white);color:var(--navy);font-family:var(--font-u);min-hei
 <div class="view" id="vRc">
   <div class="sec-top">
     <div><div class="sec-ttl">Il Ricettario</div><div class="sec-sub">Archivio di Famiglia</div></div>
-    <button class="btn-add" onclick="openAddRc()">+ Ricetta</button>
+    <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+      <button class="btn-add" style="background:var(--fog);font-size:.55rem" onclick="openSrcImport()">↗ URL</button>
+      <button class="btn-add" style="background:var(--steel);font-size:.55rem" onclick="openAiRc()">✦ AI</button>
+      <button class="btn-add" style="font-size:.55rem" onclick="openAddRc()">+ Manuale</button>
+    </div>
   </div>
   <div class="ftabs" id="tabsRc">
     <button class="ftab on" onclick="filtTab('rc','all',this)">Tutte</button>
@@ -547,10 +610,6 @@ body{background:var(--white);color:var(--navy);font-family:var(--font-u);min-hei
       <div class="fg"><label class="fl">Vino abbinato</label><input id="gf_vino" class="fc" placeholder="es. Verdicchio Castelli di Jesi"></div>
       <div class="fg"><label class="fl">Cantina / Produttore</label><input id="gf_cantina" class="fc" placeholder="es. Umani Ronchi"></div>
     </div>
-    <div class="fr2">
-      <div class="fg"><label class="fl">Latitudine (per mappa)</label><input id="gf_lat" class="fc" type="number" step="0.0001" placeholder="43.6158"></div>
-      <div class="fg"><label class="fl">Longitudine</label><input id="gf_lng" class="fc" type="number" step="0.0001" placeholder="13.5189"></div>
-    </div>
     <div class="f-sep">Risorsa consigliata</div>
     <div class="risorsa-box">
       <div class="fr2" style="margin-bottom:.5rem">
@@ -568,6 +627,31 @@ body{background:var(--white);color:var(--navy);font-family:var(--font-u);min-hei
       </div>
       <div class="fg"><label class="fl">Titolo</label><input id="gf_ris_titolo" class="fc" placeholder="Titolo del libro, brano, riflessione..."></div>
       <div class="fg"><label class="fl">Nota / Perché lo consiglio</label><textarea id="gf_ris_nota" class="fc ta" style="min-height:52px" placeholder="Connessione con il piatto o il territorio..."></textarea></div>
+    </div>
+    <div class="f-sep">📷 Media & Posizione</div>
+    <div class="fg"><label class="fl">Foto URL</label><input id="gf_foto" class="fc" type="url" placeholder="https://... (link a foto del piatto)"></div>
+    <div class="fg"><label class="fl">Audio / Video URL (QR)</label><input id="gf_audio" class="fc" type="url" placeholder="https://youtube.com/... (traccia audio o video)"></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Latitudine (mappa)</label><input id="gf_lat" class="fc" type="number" step="0.0001" placeholder="43.9162"></div>
+      <div class="fg"><label class="fl">Longitudine</label><input id="gf_lng" class="fc" type="number" step="0.0001" placeholder="12.9134"></div>
+    </div>
+    <div class="f-sep">🎨 Abbinamento Arte (da completare)</div>
+    <div class="risorsa-box">
+      <div class="fr2" style="margin-bottom:.5rem">
+        <div class="fg"><label class="fl">Tipo opera</label>
+          <select id="gf_ris_tipo" class="fc">
+            <option value="">— Da completare —</option>
+            <option value="opera">Opera d'arte</option>
+            <option value="libro">Libro</option>
+            <option value="musica">Musica</option>
+            <option value="film">Film / Documentario</option>
+            <option value="riflessione">Riflessione</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Artista / Autore</label><input id="gf_ris_autore" class="fc" placeholder="es. Lorenzo Lotto, Caravaggio"></div>
+      </div>
+      <div class="fg"><label class="fl">Opera / Titolo — con museo e distanza</label><input id="gf_ris_titolo" class="fc" placeholder="es. Pala di Pesaro — Musei Civici (200m)"></div>
+      <div class="fg"><label class="fl">Nota sinestetica</label><textarea id="gf_ris_nota" class="fc ta" style="min-height:52px" placeholder="Connessione tra il piatto e l'opera..."></textarea></div>
     </div>
     <div class="fg" style="margin-top:.6rem"><label class="fl">Fonte / URL</label><input id="gf_fonte" class="fc" placeholder="Famiglia, ricerca, libro, URL..."></div>
     <button class="btn-save gf" onclick="saveGf()">Archivia Referenza</button>
@@ -642,7 +726,7 @@ body{background:var(--white);color:var(--navy);font-family:var(--font-u);min-hei
 <div class="ov" id="setOv" onclick="closeSh('set')"></div>
 <div class="sh" id="setSh">
   <div class="sh-grip"></div>
-  <div class="sh-hdr"><span class="sh-ttl">Impostazioni</span><button class="sh-cls" onclick="closeSh('set')">✕</button></div>
+  <div class="sh-hdr"><span class="sh-ttl">Impostazioni</span><div style="display:flex;gap:.4rem;align-items:center"><button id="logoutBtn" style="display:none;border:1px solid var(--silver);background:none;cursor:pointer;font-family:var(--font-u);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;padding:.28rem .7rem;color:var(--fog);transition:all .15s" onclick="logout()">Esci</button><button class="sh-cls" onclick="closeSh('set')">✕</button></div></div>
   <div class="sh-body">
     <div class="set-row">
       <div class="set-lbl">Google Apps Script URL</div>
@@ -669,6 +753,19 @@ body{background:var(--white);color:var(--navy);font-family:var(--font-u);min-hei
       <button class="btn-tool" onclick="document.getElementById('importFile').click()">⬆ Importa JSON</button>
     </div>
     <input type="file" id="importFile" style="display:none" accept=".json" onchange="doImport(event)">
+    <div class="set-sep" id="setUserSep" style="display:none">Gestione editor</div>
+    <div id="setUserPanel" style="display:none">
+      <div class="set-row">
+        <div class="set-lbl">Editor autorizzati</div>
+        <div class="set-sub">Solo gli admin possono aggiungere o rimuovere editor.</div>
+        <div id="usrList" style="margin:.5rem 0"></div>
+        <div style="display:flex;gap:.4rem;margin-top:.5rem">
+          <input class="set-input" id="newUsrEmail" type="email" placeholder="email@esempio.com" style="flex:1;margin-top:0">
+          <input class="set-input" id="newUsrNome" type="text" placeholder="Nome" style="width:110px;margin-top:0">
+          <button class="btn-tool" onclick="addEditor()" style="white-space:nowrap;flex-shrink:0">+ Aggiungi</button>
+        </div>
+      </div>
+    </div>
     <div class="set-sep">Guida</div>
     <div class="set-guide">
       <p>1. <a href="https://script.google.com" target="_blank">script.google.com</a> → incolla <strong>Code.gs</strong></p>
@@ -676,9 +773,85 @@ body{background:var(--white);color:var(--navy);font-family:var(--font-u);min-hei
       <p>3. Copia URL <code>/exec</code> → incolla sopra → testa</p>
       <p>4. Importa JSON → Sincronizza su Sheets</p>
     </div>
+    <div id="loginFromSet" style="margin-top:.8rem;text-align:center;display:none">
+      <button class="btn-tool" onclick="closeSh('set');showAuth()" style="width:100%">Accedi come editor</button>
+    </div>
     <div style="margin-top:1.2rem;padding-top:.8rem;border-top:1px solid var(--silver);font-size:.58rem;color:var(--mist);text-align:center">Atelier Sinestetico · v4.0 · 2025</div>
   </div>
 </div>
+
+<!-- AI WIZARD SHEET -->
+<div class="ov" id="aiOv" onclick="closeSh('ai')"></div>
+<div class="sh" id="aiSh" style="max-height:94vh">
+  <div class="sh-grip"></div>
+  <div class="sh-hdr">
+    <span class="sh-ttl" id="aiShTtl">✦ Importa con AI</span>
+    <button class="sh-cls" onclick="closeSh('ai')">✕</button>
+  </div>
+  <div class="sh-body">
+    <div class="ai-panel">
+      <label class="fl">Anthropic API Key</label>
+      <input id="aiApiKey" class="fc" type="password" placeholder="sk-ant-api03-...">
+      <button class="btn-xs" style="margin-top:.4rem" onclick="saveAiKey()">Salva chiave</button>
+    </div>
+    <div class="fg">
+      <label class="fl">Sezione di destinazione</label>
+      <select id="aiDestSec" class="fc">
+        <option value="rc">Il Ricettario</option>
+        <option value="md">M'è dolce — Cioccolateria</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Testo grezzo — incolla ricetta, appunti, trascrizione video</label>
+      <textarea id="aiRawText" class="fc ta" style="min-height:130px" placeholder="Incolla qui la ricetta in qualsiasi formato: da un sito, da un libro, da note sparse, da trascrizione YouTube..."></textarea>
+    </div>
+    <div class="fg">
+      <label class="fl">URL di origine (opzionale)</label>
+      <input id="aiSrcUrl" class="fc" type="url" placeholder="https://youtube.com/watch?v=... oppure URL sito ricetta">
+    </div>
+    <div class="fg">
+      <label class="fl">Nota aggiuntiva per l'AI (opzionale)</label>
+      <input id="aiNote" class="fc" placeholder="es. 'è una ricetta marchigiana' oppure 'versione di famiglia'">
+    </div>
+    <button class="btn-save" id="aiRunBtn" onclick="runAI()" style="background:var(--steel)">✦ Elabora con AI</button>
+    <div id="aiStatusBox" style="display:none"></div>
+    <div id="aiPreviewBox"></div>
+  </div>
+</div>
+
+<!-- URL SCRAPER SHEET -->
+<div class="ov" id="srcOv" onclick="closeSh('src')"></div>
+<div class="sh" id="srcSh" style="max-height:94vh">
+  <div class="sh-grip"></div>
+  <div class="sh-hdr">
+    <span class="sh-ttl">↗ Importa da URL</span>
+    <button class="sh-cls" onclick="closeSh('src')">✕</button>
+  </div>
+  <div class="sh-body">
+    <div style="font-size:.75rem;color:var(--fog);line-height:1.6;margin-bottom:.9rem;font-family:var(--font-b);font-style:italic">
+      Incolla l'URL di una ricetta online o di un video YouTube. L'AI estrae il testo e compila automaticamente la scheda.
+    </div>
+    <div class="fg">
+      <label class="fl">URL fonte</label>
+      <input id="srcUrl" class="fc" type="url" placeholder="https://youtube.com/watch?v=... oppure URL ricetta">
+    </div>
+    <div class="fg">
+      <label class="fl">Sezione di destinazione</label>
+      <select id="srcDestSec" class="fc">
+        <option value="rc">Il Ricettario</option>
+        <option value="md">M'è dolce — Cioccolateria</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Testo della ricetta (se non estraibile automaticamente)</label>
+      <textarea id="srcText" class="fc ta" style="min-height:100px" placeholder="Se l'URL è un video YouTube, incolla qui la trascrizione o la descrizione della ricetta..."></textarea>
+    </div>
+    <button class="btn-save" onclick="runSrcImport()" style="background:var(--steel)">↗ Importa e classifica</button>
+    <div id="srcStatusBox" style="display:none"></div>
+    <div id="srcPreviewBox"></div>
+  </div>
+</div>
+
 
 <div id="toast"></div>
 <script>
@@ -748,13 +921,19 @@ async function gasPost(action,section,data,id){
 async function syncAll(){
   if(!GAS_URL){setSyncState('');return;}
   setSyncState('loading');
-  let ok=true;
+  let ok=true, updated=false;
   for(const key of ['medolce','gastronomia','ricettario','notizie']){
     const r=await gasGet(key);
-    if(r&&Array.isArray(r)&&r.length>0) D[key]=r;
-    else if(r===null) ok=false;
+    if(r&&Array.isArray(r)){
+      // Merge: prendi il cloud come fonte di verita
+      // ma mantieni record locali che non sono ancora su cloud (id non presente)
+      const cloudIds=new Set(r.map(x=>String(x.id)));
+      const localOnly=(D[key]||[]).filter(x=>!cloudIds.has(String(x.id)));
+      D[key]=[...r,...localOnly];
+      updated=true;
+    } else if(r===null){ ok=false; }
   }
-  saveLocal();
+  if(updated) saveLocal();
   setSyncState(ok?'ok':'err');
   return ok;
 }
@@ -997,6 +1176,7 @@ function renderGfCard(r){
       </div>
     </div>
     ${pills.length?`<div class="gf-card-foot">${pills.join('')}</div>`:''}
+    ${r.fotoUrl?`<div style="margin-top:.3rem"><img src="${r.fotoUrl}" alt="${esc(r.nome||'')}" style="width:100%;max-height:140px;object-fit:cover;border:1px solid var(--silver)" onerror="this.style.display='none'"></div>`:''}
   </div>`;
 }
 
@@ -1046,6 +1226,8 @@ function openEditGf(id){
   document.getElementById('gf_ris_tipo').value=r.risorsa_tipo||'';document.getElementById('gf_ris_autore').value=r.risorsa_autore||'';
   document.getElementById('gf_ris_titolo').value=r.risorsa_titolo||'';document.getElementById('gf_ris_nota').value=r.risorsa_nota||'';
   document.getElementById('gf_fonte').value=r.fonte||'';
+  document.getElementById('gf_foto').value=r.fotoUrl||'';
+  document.getElementById('gf_audio').value=r.audioUrl||'';
   document.getElementById('gf_delBtn').style.display='block';openSh('gf');
 }
 async function saveGf(){
@@ -1074,7 +1256,9 @@ function openDetGf(id){
       ${r.descrizione?`<div class="det-desc-hero">${esc(r.descrizione)}</div>`:''}
     </div>
     <div class="det-body">
-      ${r.vino||r.cantina?`<div class="det-lbl">Vino & Cantina</div><div class="det-note-b">${r.vino?`🍷 ${esc(r.vino)}`:''} ${r.cantina?`<br><span style="font-size:.8rem;color:var(--steel)">↗ ${esc(r.cantina)}</span>`:''}</div>`:''}
+      ${r.fotoUrl?`<img src="${r.fotoUrl}" alt="${esc(r.nome||'')}" style="width:100%;max-height:200px;object-fit:cover;border-bottom:1px solid var(--silver);margin-bottom:.3rem" onerror="this.style.display='none'">`:''}
+    ${r.audioUrl?`<div class="det-music" style="margin:.3rem 1.2rem"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><a href="${r.audioUrl}" target="_blank" style="color:var(--navy2);text-decoration:none;font-style:italic">Ascolta / Guarda →</a></div>`:''}
+    ${r.vino||r.cantina?`<div class="det-lbl">Vino & Cantina</div><div class="det-note-b">${r.vino?`🍷 ${esc(r.vino)}`:''} ${r.cantina?`<br><span style="font-size:.8rem;color:var(--steel)">↗ ${esc(r.cantina)}</span>`:''}</div>`:''}
       ${ingsHtml?`<div class="det-lbl">Ingredienti</div><ul>${ingsHtml}</ul>`:''}
       ${stepsHtml?`<div class="det-lbl">Procedimento</div>${stepsHtml}`:''}
       ${r.risorsa_tipo&&r.risorsa_titolo?`<div class="det-lbl">Risorsa consigliata</div><div class="det-risorsa"><div class="det-risorsa-tipo">${r.risorsa_tipo==='libro'?'📖 Libro':r.risorsa_tipo==='musica'?'🎵 Musica':r.risorsa_tipo==='film'?'🎬 Film':'💭 Riflessione'}${r.risorsa_autore?' · '+esc(r.risorsa_autore):''}</div><div class="det-risorsa-titolo">${esc(r.risorsa_titolo)}</div>${r.risorsa_nota?`<div class="det-risorsa-nota">${esc(r.risorsa_nota)}</div>`:''}</div>`:''}
@@ -1275,6 +1459,44 @@ function doImport(evt){
 }
 
 // ═══════════════════════════════════════════════════
+//  AUTO-NOTIZIA
+// ═══════════════════════════════════════════════════
+function autoNotizia(rec, sec) {
+  const labels = { md:"M'è dolce", gf:'Gastronomia di Frontiera', rc:'Ricettario' };
+  const tipoLabel = { piatto:'Piatto', ristorante:'Ristorante', vino:'Vino', produttore:'Produttore', mercato:'Mercato' };
+  let titolo = rec.nome || rec.name || '';
+  let testo = '';
+  if (sec === 'md') {
+    const sub = (rec.categoria && MD_SUBS[rec.categoria] && rec.sottocategoria) ? ' · ' + MD_SUBS[rec.categoria][rec.sottocategoria] : '';
+    testo = `Nuova ricetta M'è dolce${sub}${rec.descrizione ? ' — ' + rec.descrizione : ''}`;
+  } else if (sec === 'gf') {
+    const tipo = tipoLabel[rec.tipo] || 'Referenza';
+    const luogo = [rec.regione, rec.citta].filter(Boolean).join(' · ');
+    testo = `${tipo}${luogo ? ' · ' + luogo : ''}${rec.vino ? ' · Vino: ' + rec.vino : ''}${rec.descrizione ? ' — ' + rec.descrizione : ''}`;
+  } else if (sec === 'rc') {
+    const cat = rec.category || rec.categoria || '';
+    const tot = (rec.prep || 0) + (rec.cook || 0);
+    testo = `${cat}${tot ? ' · ' + tot + ' min' : ''}${rec.difficulty ? ' · ' + rec.difficulty : ''}`;
+  }
+  const notizia = {
+    id: 'AUTO_' + rec.id,
+    titolo,
+    categoria: labels[sec] || 'Aggiornamento',
+    fonte: sec === 'gf' ? (rec.cantina || '') : 'Archivio Atelier Sinestetico',
+    testo,
+    url: rec.audioUrl || rec.fotoUrl || '',
+    data: new Date().toISOString()
+  };
+  // Rimuovi eventuale notizia precedente dello stesso record
+  D.notizie = D.notizie.filter(n => n.id !== notizia.id);
+  D.notizie.unshift(notizia);
+  saveLocal();
+  gasPost('add', 'notizie', notizia);
+  if (document.getElementById('vHome').classList.contains('on')) renderNews();
+  updCounts();
+}
+
+// ═══════════════════════════════════════════════════
 //  SHEET UTILS
 // ═══════════════════════════════════════════════════
 function openSh(id){document.getElementById(id+'Ov').style.display='block';requestAnimationFrame(()=>document.getElementById(id+'Sh').classList.add('op'));}
@@ -1288,15 +1510,319 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')['md','gf','rc','news','det','set'].forEach(id=>closeSh(id));});
 
+
+
+// ═══════════════════════════════════════════════════
+//  AI WIZARD — Import & classify recipes
+// ═══════════════════════════════════════════════════
+const AI_KEY_LS = 'atelier_ai_key';
+
+function saveAiKey(){
+  const k = document.getElementById('aiApiKey').value.trim();
+  if(k){ localStorage.setItem(AI_KEY_LS,k); toast('API Key salvata'); }
+}
+
+function openAiRc(){
+  document.getElementById('aiDestSec').value='rc';
+  document.getElementById('aiShTtl').textContent="✦ Importa nel Ricettario con AI";
+  _resetAiSheet();
+  openSh('ai');
+}
+function openAiMd(){
+  document.getElementById('aiDestSec').value='md';
+  document.getElementById('aiShTtl').textContent="✦ Importa in M'è dolce con AI";
+  _resetAiSheet();
+  openSh('ai');
+}
+function _resetAiSheet(){
+  document.getElementById('aiRawText').value='';
+  document.getElementById('aiSrcUrl').value='';
+  document.getElementById('aiNote').value='';
+  document.getElementById('aiStatusBox').style.display='none';
+  document.getElementById('aiPreviewBox').innerHTML='';
+  const k=localStorage.getItem(AI_KEY_LS);
+  if(k) document.getElementById('aiApiKey').value=k;
+}
+
+function _buildSysPrompt(sec){
+  if(sec==='md'){
+    return `Sei il maestro archivista dell'Atelier Sinestetico di Recanati, cioccolateria sinestetica ispirata a Giacomo Leopardi.
+Analizza il testo grezzo fornito e restituisci SOLO un oggetto JSON valido senza markdown né testo aggiuntivo:
+{"nome":"Nome evocativo (può essere leopardiano)","codice":"XXX-XXX-001","categoria":"A|B|C","sottocategoria":"A1-A5|B1-B4|C1-C6","descrizione":"Descrizione sensoriale max 120 caratteri","ingredienti":[{"nome":"...","peso":0,"pct":0,"unita":"g"}],"procedimento":["fase 1","fase 2"],"note":"Note tecniche professionali con temperatura/shelf life","abbinamento":"Vino · Tè","musica":"Brano — Compositore/Artista","citazione":"«...» — G. Leopardi, Opera (anno)","fonte":"Fonte originale"}
+Categorie: A=cioccolatini/praline/tavolette (A1:guscio,A2:ripieni,A3:tartufi,A4:monorigine,A5:inclusi) B=micro pasticceria (B1:monoporzioni,B2:petits fours,B3:biscotteria,B4:caramelle) C=elementi base (C1:ganache,C2:pralinati,C3:gelatine,C4:aromi,C5:innovativi,C6:biscotti base)
+Bilancia le percentuali degli ingredienti a 100%. Scegli citazione leopardiana coerente con il sapore/atmosfera del prodotto.`;
+  }
+  return `Sei un assistente gastronomico dell'Atelier Sinestetico. Analizza il testo e restituisci SOLO JSON valido senza markdown:
+{"name":"Nome ricetta","category":"🍝 Primi|🥩 Secondi|🫒 Antipasti|🍫 Dolci|🍞 Pane & Lievitati|🥗 Contorni|🍹 Bevande","difficulty":"Facile|Media|Difficile","prep":0,"cook":0,"servings":4,"ingredients":["ingrediente 1","ingrediente 2"],"steps":[{"text":"passo 1","ingredients":[]},{"text":"passo 2","ingredients":[]}],"notes":"Note e consigli","tags":["tag1","tag2"],"sourceUrl":""}
+Regole: prep e cook in minuti interi, servings numero intero, ingredients lista di stringhe (es. '300g farina 00'), steps array di oggetti con testo del passo, tags parole chiave italiane pertinenti.`;
+}
+
+async function runAI(){
+  const raw  = document.getElementById('aiRawText').value.trim();
+  const src  = document.getElementById('aiSrcUrl').value.trim();
+  const nota = document.getElementById('aiNote').value.trim();
+  const sec  = document.getElementById('aiDestSec').value;
+  const key  = document.getElementById('aiApiKey').value.trim() || localStorage.getItem(AI_KEY_LS);
+
+  if(!raw){ toast("Incolla prima il testo della ricetta"); return; }
+  if(!key){ toast("Inserisci la tua API Key Anthropic"); return; }
+
+  const statusBox = document.getElementById('aiStatusBox');
+  const prevBox   = document.getElementById('aiPreviewBox');
+  statusBox.style.display='block';
+  statusBox.className='ai-status loading';
+  statusBox.innerHTML='<div class="spin" style="width:14px;height:14px;flex-shrink:0"></div><span>Analisi AI in corso...</span>';
+  prevBox.innerHTML='';
+  document.getElementById('aiRunBtn').disabled=true;
+
+  const userMsg = `${raw}${src?'\n\nFonte URL: '+src:''}${nota?'\n\nNota: '+nota:''}`;
+
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        system: _buildSysPrompt(sec),
+        messages:[{role:'user',content:userMsg}]
+      })
+    });
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error?.message||'Errore API');
+
+    const txt = data.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(txt);
+    if(src && !parsed.sourceUrl) parsed.sourceUrl = src;
+
+    statusBox.className='ai-status ok';
+    statusBox.innerHTML='<span>✓</span><span>Elaborazione completata — verifica e archivia</span>';
+    _showAiPreview(parsed, sec);
+  }catch(e){
+    statusBox.className='ai-status err';
+    statusBox.innerHTML='<span>⚠</span><span>Errore: '+e.message+'</span>';
+  }
+  document.getElementById('aiRunBtn').disabled=false;
+}
+
+function _showAiPreview(r, sec){
+  const prevBox = document.getElementById('aiPreviewBox');
+  const nome = r.nome || r.name || '—';
+  const cat  = r.category || r.categoria || r.cat || '';
+  const meta = [];
+  if(r.difficulty||r.difficolta) meta.push(r.difficulty||r.difficolta);
+  if(r.prep||r.cook) meta.push(((r.prep||0)+(r.cook||0))+'min');
+  if(r.servings) meta.push(r.servings+' porz.');
+  if(r.categoria) meta.push('Cat. '+r.categoria+(r.sottocategoria?' · '+r.sottocategoria:''));
+
+  const srcChip = (r.sourceUrl||r.fonte) ?
+    `<span class="src-chip">↗ ${esc((r.sourceUrl||r.fonte).slice(0,50)+(((r.sourceUrl||r.fonte).length>50)?'...':''))}</span>` : '';
+
+  prevBox.innerHTML=`
+    <div class="ai-prev">
+      <div class="ai-prev-ttl">${esc(nome)}</div>
+      <div class="ai-prev-meta">${esc(cat)}${meta.length?' · '+meta.join(' · '):''}${r.note||r.notes?' · '+esc((r.note||r.notes).slice(0,60))+'...':''}</div>
+      ${r.citazione?`<div style="font-family:var(--font-b);font-style:italic;font-size:.8rem;color:var(--fog);border-left:2px solid var(--gold);padding-left:.6rem;margin:.4rem 0">${esc(r.citazione)}</div>`:''}
+      ${srcChip}
+      <div style="margin-top:.3rem">
+        <span class="src-chip">${(r.ingredients||r.ingredienti||[]).length} ingredienti</span>
+        <span class="src-chip">${(r.steps||r.procedimento||[]).length} fasi</span>
+        ${(r.tags||[]).map(t=>`<span class="src-chip">${esc(t)}</span>`).join('')}
+      </div>
+      <button class="btn-save" style="margin-top:.7rem;padding:.65rem" onclick="_archiviaAI(${JSON.stringify(JSON.stringify(r))}, '${sec}')">💾 Archivia questa ricetta</button>
+    </div>`;
+}
+
+function _archiviaAI(rJson, sec){
+  const r = JSON.parse(rJson);
+  r.id = genId();
+  if(sec==='md'){
+    r.dataCreazione = new Date().toISOString();
+    D.medolce.unshift(r);
+    saveLocal(); gasPost('add','medolce',r);
+    renderMd(); updCounts();
+    autoNotizia(r,'md');
+  } else {
+    r.createdAt = Date.now();
+    if(!r.emoji) r.emoji = RC_ICO[r.category]||'🍽️';
+    // normalize steps
+    if(Array.isArray(r.steps) && r.steps.length && typeof r.steps[0]==='string'){
+      r.steps = r.steps.map(t=>({text:t,ingredients:[]}));
+    }
+    D.ricettario.unshift(r);
+    saveLocal(); gasPost('add','ricettario',r);
+    renderRc(); updCounts();
+    autoNotizia(r,'rc');
+  }
+  closeSh('ai');
+  toast('✓ Ricetta archiviata: '+( r.nome||r.name));
+}
+
+// ── URL / Source direct import ──
+function openSrcImport(){
+  document.getElementById('srcUrl').value='';
+  document.getElementById('srcText').value='';
+  document.getElementById('srcStatusBox').style.display='none';
+  document.getElementById('srcPreviewBox').innerHTML='';
+  const k=localStorage.getItem(AI_KEY_LS);
+  if(k) document.getElementById('aiApiKey').value=k;
+  openSh('src');
+}
+
+async function runSrcImport(){
+  const url  = document.getElementById('srcUrl').value.trim();
+  const txt  = document.getElementById('srcText').value.trim();
+  const sec  = document.getElementById('srcDestSec').value;
+
+  if(!url && !txt){ toast("Inserisci un URL o il testo della ricetta"); return; }
+
+  // Pre-fill the AI wizard with the source data and run
+  document.getElementById('aiDestSec').value = sec;
+  document.getElementById('aiSrcUrl').value  = url;
+  document.getElementById('aiRawText').value = txt || ('Ricetta da: '+url+'\n\nEstrai e struttura questa ricetta.');
+  closeSh('src');
+  openSh('ai');
+  // Auto-run after a tick
+  setTimeout(runAI, 400);
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTH — RUOLI: admin / editor / reader
+// ═══════════════════════════════════════════════════
+const AUTH_KEY='atelier_auth_v1';
+const ADMIN_EMAIL_AUTH='s.straccini@gmail.com';
+let ROLE='reader';
+let AUTH_USER=null;
+
+function loadAuth(){try{const a=localStorage.getItem(AUTH_KEY);if(a)AUTH_USER=JSON.parse(a);}catch(e){}}
+function saveAuth(u){AUTH_USER=u;localStorage.setItem(AUTH_KEY,JSON.stringify(u));}
+function clearAuth(){AUTH_USER=null;localStorage.removeItem(AUTH_KEY);}
+
+async function verifyEmail(email){
+  if(!GAS_URL)return null;
+  try{
+    const r=await fetch(GAS_URL+'?action=verifica&email='+encodeURIComponent(email),{redirect:'follow'});
+    const j=await r.json();
+    return j.ok?j.utente:null;
+  }catch(e){return null;}
+}
+
+async function doLogin(){
+  const email=document.getElementById('authEmail').value.trim().toLowerCase();
+  const err=document.getElementById('authErr');
+  if(!email||!email.includes('@')){err.textContent="Inserisci un'email valida";return;}
+  err.textContent='Verifica in corso...';
+  if(email===ADMIN_EMAIL_AUTH.toLowerCase()){
+    const u={ruolo:'admin',nome:'Silvano Straccini',email};
+    saveAuth(u);applyRole(u);hideAuthScreen();return;
+  }
+  const utente=await verifyEmail(email);
+  if(utente){saveAuth(utente);applyRole(utente);hideAuthScreen();}
+  else{err.textContent='Email non autorizzata come editor.';}
+}
+
+function continueAsReader(){
+  clearAuth();
+  applyRole({ruolo:'reader',nome:'Lettore',email:''});
+  hideAuthScreen();
+}
+
+function hideAuthScreen(){
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+
+function showAuthScreen(){
+  document.getElementById('authScreen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+function applyRole(user){
+  ROLE=user.ruolo||'reader';
+  AUTH_USER=user;
+  const chip=document.getElementById('roleChip');
+  const chipWrap=document.getElementById('roleChipWrap');
+  if(ROLE!=='reader'){
+    chip.className='role-chip '+ROLE;
+    chip.textContent=ROLE==='admin'?'Admin':'Editor';
+    chipWrap.style.display='block';
+  } else {chipWrap.style.display='none';}
+  const canEdit=(ROLE==='admin'||ROLE==='editor');
+  document.querySelectorAll('.btn-add').forEach(b=>b.style.display=canEdit?'':'none');
+  const lb=document.getElementById('logoutBtn');
+  if(lb)lb.style.display=canEdit?'block':'none';
+  const lbSet=document.getElementById('loginFromSet');
+  if(lbSet)lbSet.style.display=(!canEdit)?'block':'none';
+  if(ROLE==='admin'){
+    const sp=document.getElementById('setUserSep');
+    const pp=document.getElementById('setUserPanel');
+    if(sp)sp.style.display='block';
+    if(pp)pp.style.display='block';
+    loadEditorList();
+  }
+}
+
+async function loadEditorList(){
+  if(!GAS_URL||ROLE!=='admin')return;
+  const el=document.getElementById('usrList');
+  if(!el)return;
+  el.innerHTML='<div style="font-size:.7rem;color:var(--fog)">Caricamento...</div>';
+  try{
+    const r=await fetch(GAS_URL+'?action=getUtenti',{redirect:'follow'});
+    const j=await r.json();
+    const utenti=(j.data||[]).filter(u=>u.attivo!=='false'&&u.attivo!==false);
+    if(!utenti.length){el.innerHTML='<div style="font-size:.72rem;color:var(--fog)">Nessun editor ancora.</div>';return;}
+    el.innerHTML=utenti.map(u=>`<div class="usr-row"><div style="flex:1"><div class="usr-email">${esc(u.email)}</div><div class="usr-name">${esc(u.nome||'')} <span class="role-chip editor" style="font-size:.52rem">${esc(u.ruolo||'editor')}</span></div></div><button class="usr-del" onclick="removeEditor('${esc(u.email)}')" title="Rimuovi">✕</button></div>`).join('');
+  }catch(e){el.innerHTML='<div style="font-size:.72rem;color:#b03030">Errore</div>';}
+}
+
+async function addEditor(){
+  if(ROLE!=='admin')return;
+  const email=document.getElementById('newUsrEmail').value.trim();
+  const nome=document.getElementById('newUsrNome').value.trim();
+  if(!email||!email.includes('@')){toast('Email non valida');return;}
+  try{
+    await fetch(GAS_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'aggiungiEditor',email,nome}),headers:{'Content-Type':'text/plain'}});
+    document.getElementById('newUsrEmail').value='';
+    document.getElementById('newUsrNome').value='';
+    toast('✓ Editor aggiunto: '+email);
+    setTimeout(loadEditorList,800);
+  }catch(e){toast('Errore aggiunta editor');}
+}
+
+async function removeEditor(email){
+  if(ROLE!=='admin'||!confirm('Rimuovere accesso a '+email+'?'))return;
+  try{
+    await fetch(GAS_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'rimuoviEditor',email}),headers:{'Content-Type':'text/plain'}});
+    toast('✓ Accesso rimosso: '+email);
+    setTimeout(loadEditorList,800);
+  }catch(e){toast('Errore rimozione');}
+}
+
+function logout(){clearAuth();location.reload();}
+
 // ═══════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════
 async function init(){
   loadLocal();
+  loadAuth();
   initGasStatus();
+  // Auth: reader di default, nessun login wall
+  if(AUTH_USER&&AUTH_USER.ruolo==='admin'&&AUTH_USER.email===ADMIN_EMAIL_AUTH.toLowerCase()){
+    applyRole(AUTH_USER);
+  } else if(AUTH_USER&&GAS_URL){
+    const utente=await verifyEmail(AUTH_USER.email);
+    if(utente){saveAuth(utente);applyRole(utente);}
+    else{clearAuth();applyRole({ruolo:'reader',nome:'Lettore',email:''});}
+  } else if(AUTH_USER){
+    applyRole(AUTH_USER);
+  } else {
+    applyRole({ruolo:'reader',nome:'Lettore',email:''});
+  }
+  hideAuthScreen();
   renderHome();
   renderRegionGrid();
-  // Auto-sync on startup
   if(GAS_URL){
     setSyncState('loading');
     const ok=await syncAll();
