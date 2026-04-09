@@ -1097,6 +1097,7 @@ function openEditMd(id){
 }
 function parseMdIngs(raw){return raw.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|').map(s=>s.trim());return{nome:p[0]||'',peso:parseFloat(p[1])||0,pct:parseFloat(p[2])||0,unita:'g'};});}
 async function saveMd(){
+  if(ROLE==='reader'){toast('Accedi come editor — ⚙️ Impostazioni');return;}
   const nome=document.getElementById('md_nome').value.trim(),cat=document.getElementById('md_cat').value;
   if(!nome||!cat){toast('Nome e categoria obbligatori');return;}
   const existId=document.getElementById('md_id').value,isEdit=!!existId,id=existId||genId();
@@ -1231,6 +1232,7 @@ function openEditGf(id){
   document.getElementById('gf_delBtn').style.display='block';openSh('gf');
 }
 async function saveGf(){
+  if(ROLE==='reader'){toast('Accedi come editor — ⚙️ Impostazioni');return;}
   const nome=document.getElementById('gf_nome').value.trim(),reg=document.getElementById('gf_reg').value;
   if(!nome){toast('Nome obbligatorio');return;}
   const existId=document.getElementById('gf_id').value,isEdit=!!existId,id=existId||genId();
@@ -1304,6 +1306,7 @@ function openEditRc(id){
   document.getElementById('rc_src').value=r.sourceUrl||'';document.getElementById('rc_delBtn').style.display='block';openSh('rc');
 }
 async function saveRc(){
+  if(ROLE==='reader'){toast('Accedi come editor — ⚙️ Impostazioni');return;}
   const nome=document.getElementById('rc_nome').value.trim();if(!nome){toast('Nome obbligatorio');return;}
   const cat=document.getElementById('rc_cat').value,existId=document.getElementById('rc_id').value,isEdit=!!existId,id=existId||genId();
   const orig=isEdit?(D.ricettario.find(x=>x.id===id)||{}):{};
@@ -1558,6 +1561,7 @@ Regole: prep e cook in minuti interi, servings numero intero, ingredients lista 
 }
 
 async function runAI(){
+  if(ROLE==='reader'){toast('Accedi come editor — Impostazioni ⚙️');return;}
   const raw  = document.getElementById('aiRawText').value.trim();
   const src  = document.getElementById('aiSrcUrl').value.trim();
   const nota = document.getElementById('aiNote').value.trim();
@@ -1748,7 +1752,7 @@ function applyRole(user){
     chipWrap.style.display='block';
   } else {chipWrap.style.display='none';}
   const canEdit=(ROLE==='admin'||ROLE==='editor');
-  document.querySelectorAll('.btn-add').forEach(b=>b.style.display=canEdit?'':'none');
+  // Buttons always visible — readers blocked at save time with toast
   const lb=document.getElementById('logoutBtn');
   if(lb)lb.style.display=canEdit?'block':'none';
   const lbSet=document.getElementById('loginFromSet');
