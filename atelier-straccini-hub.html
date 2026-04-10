@@ -785,15 +785,11 @@ body{background:var(--white);color:var(--navy);font-family:var(--font-u);min-hei
 <div class="sh" id="aiSh" style="max-height:94vh">
   <div class="sh-grip"></div>
   <div class="sh-hdr">
-    <span class="sh-ttl" id="aiShTtl">✦ Importa con AI</span>
+    <span class="sh-ttl" id="aiShTtl">✦ Elabora con AI</span>
     <button class="sh-cls" onclick="closeSh('ai')">✕</button>
   </div>
   <div class="sh-body">
-    <div class="ai-panel">
-      <label class="fl">Anthropic API Key</label>
-      <input id="aiApiKey" class="fc" type="password" placeholder="sk-ant-api03-...">
-      <button class="btn-xs" style="margin-top:.4rem" onclick="saveAiKey()">Salva chiave</button>
-    </div>
+
     <div class="fg">
       <label class="fl">Sezione di destinazione</label>
       <select id="aiDestSec" class="fc">
@@ -1518,13 +1514,6 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')['md','gf','rc','new
 // ═══════════════════════════════════════════════════
 //  AI WIZARD — Import & classify recipes
 // ═══════════════════════════════════════════════════
-const AI_KEY_LS = 'atelier_ai_key';
-
-function saveAiKey(){
-  const k = document.getElementById('aiApiKey').value.trim();
-  if(k){ localStorage.setItem(AI_KEY_LS,k); toast('API Key salvata'); }
-}
-
 function openAiRc(){
   document.getElementById('aiDestSec').value='rc';
   document.getElementById('aiShTtl').textContent="✦ Importa nel Ricettario con AI";
@@ -1543,8 +1532,7 @@ function _resetAiSheet(){
   document.getElementById('aiNote').value='';
   document.getElementById('aiStatusBox').style.display='none';
   document.getElementById('aiPreviewBox').innerHTML='';
-  const k=localStorage.getItem(AI_KEY_LS);
-  if(k) document.getElementById('aiApiKey').value=k;
+
 }
 
 function _buildSysPrompt(sec){
@@ -1566,10 +1554,8 @@ async function runAI(){
   const src  = document.getElementById('aiSrcUrl').value.trim();
   const nota = document.getElementById('aiNote').value.trim();
   const sec  = document.getElementById('aiDestSec').value;
-  const key  = document.getElementById('aiApiKey').value.trim() || localStorage.getItem(AI_KEY_LS);
 
   if(!raw){ toast("Incolla prima il testo della ricetta"); return; }
-  if(!key){ toast("Inserisci la tua API Key Anthropic"); return; }
 
   const statusBox = document.getElementById('aiStatusBox');
   const prevBox   = document.getElementById('aiPreviewBox');
@@ -1579,7 +1565,7 @@ async function runAI(){
   prevBox.innerHTML='';
   document.getElementById('aiRunBtn').disabled=true;
 
-  const userMsg = `${raw}${src?'\n\nFonte URL: '+src:''}${nota?'\n\nNota: '+nota:''}`;
+  const userMsg = raw+(src?'\n\nFonte URL: '+src:'')+(nota?'\n\nNota: '+nota:'');
 
   try{
     const resp = await fetch('https://api.anthropic.com/v1/messages',{
@@ -1668,8 +1654,7 @@ function openSrcImport(){
   document.getElementById('srcText').value='';
   document.getElementById('srcStatusBox').style.display='none';
   document.getElementById('srcPreviewBox').innerHTML='';
-  const k=localStorage.getItem(AI_KEY_LS);
-  if(k) document.getElementById('aiApiKey').value=k;
+
   openSh('src');
 }
 
