@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <style>
+      .bg      { fill: #FAF6EF; }
+      .outline { fill: none; stroke: #0C1B33; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .navy    { fill: #0C1B33; }
+      .oro     { fill: #C9A96E; }
+      .ombra   { fill: #0C1B33; opacity: 0.12; }
+      .avorio  { fill: #FAF6EF; }
+      .lucido  { fill: #FAF6EF; opacity: 0.4; }
+    </style>
+  </defs>
+
+  <!-- Sfondo avorio -->
+  <rect class="bg" width="400" height="500"/>
+
+  <!-- Sottopiatto (cerchio oro sottile) -->
+  <circle cx="200" cy="310" r="130" fill="none" stroke="#C9A96E" stroke-width="1.5"/>
+  <circle cx="200" cy="310" r="110" fill="none" stroke="#C9A96E" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- Ombra della pralina -->
+  <ellipse class="ombra" cx="210" cy="345" rx="85" ry="12"/>
+
+  <!-- Pralina — metà intera -->
+  <path class="navy" d="M 200,220
+    Q 140,220 125,275
+    Q 118,320 145,340
+    Q 175,355 205,350
+    L 205,270
+    Q 205,240 200,220 Z"/>
+
+  <!-- Pralina — metà sezionata (mostra ganache oro) -->
+  <path class="oro" d="M 205,220
+    Q 265,220 280,275
+    Q 287,320 260,340
+    Q 230,355 205,350
+    L 205,270
+    Q 205,240 205,220 Z"/>
+
+  <!-- Linea di taglio -->
+  <line class="outline" x1="205" y1="215" x2="205" y2="355"/>
+
+  <!-- Outline praline -->
+  <path class="outline" d="M 200,220
+    Q 140,220 125,275
+    Q 118,320 145,340
+    Q 175,355 205,350
+    Q 235,355 260,340
+    Q 287,320 280,275
+    Q 265,220 205,220 Z"/>
+
+  <!-- Interno pralina lato sezionato (decorazione ganache) -->
+  <ellipse cx="245" cy="285" rx="22" ry="28" fill="#FAF6EF" opacity="0.9"/>
+  <ellipse cx="245" cy="285" rx="22" ry="28" fill="none" stroke="#0C1B33" stroke-width="1.5"/>
+  <circle cx="245" cy="285" r="6" class="navy"/>
+
+  <!-- Highlight lucido sulla pralina navy -->
+  <ellipse class="lucido" cx="160" cy="245" rx="15" ry="8" transform="rotate(-25 160 245)"/>
+
+  <!-- Goccia di ganache che cola -->
+  <path class="oro" d="M 270,340
+    Q 272,360 268,370
+    Q 264,378 262,370
+    Q 260,360 265,345 Z"/>
+  <path class="outline" d="M 270,340
+    Q 272,360 268,370
+    Q 264,378 262,370
+    Q 260,360 265,345"/>
+
+  <!-- Piccolo dettaglio decorativo in alto (come un timbro) -->
+  <circle cx="200" cy="95" r="28" fill="none" stroke="#C9A96E" stroke-width="1.5"/>
+  <text x="200" y="102" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="18" fill="#0C1B33">A1</text>
+</svg>
