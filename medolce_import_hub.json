@@ -1,0 +1,189 @@
+{
+  "recipes": [
+    {
+      "id": "9f08fd00-5081-4ba5-9278-d196983345f2",
+      "name": "Frolla dell'Infinito",
+      "leopardi_poem": "L'Infinito",
+      "literary_citation": "«Sempre caro mi fu quest'ermo colle, / e questa siepe, che da tanta parte / dell'ultimo orizzonte il guardo esclude.»",
+      "music_qr": "Frédéric Chopin – Notturno op.9 n.2 in Mi bem. (Arthur Rubinstein, 1965)",
+      "sinesthetic_note": "Burro e vaniglia che si sciolgono lenti come pensieri in un pomeriggio marchigiano d'autunno. Texture sabbiosamente tenera, colore avorio del cielo prima del tramonto.",
+      "category": "frolla",
+      "emoji": "🍃",
+      "difficulty": "base",
+      "prep": 20,
+      "cook": 18,
+      "servings": 8,
+      "ingredients": [
+        {
+          "name": "farina 00",
+          "amount": 300,
+          "unit": "g"
+        },
+        {
+          "name": "burro morbido",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "zucchero a velo",
+          "amount": 100,
+          "unit": "g"
+        },
+        {
+          "name": "uovo intero",
+          "amount": 1,
+          "unit": "pz"
+        },
+        {
+          "name": "tuorlo",
+          "amount": 1,
+          "unit": "pz"
+        },
+        {
+          "name": "semi di vaniglia",
+          "amount": 1,
+          "unit": "pz"
+        },
+        {
+          "name": "sale fino",
+          "amount": 2,
+          "unit": "g"
+        }
+      ],
+      "steps": [
+        "Partire sempre da zucchero a velo e burro morbido: lavorarli fino a crema omogenea. Questo ordine evita la formazione di glutine eccessivo.",
+        "Aggiungere l'uovo intero, poi il tuorlo uno alla volta. Incorporare completamente prima di proseguire.",
+        "Inserire tutta la farina in una volta con sale e vaniglia. Impastare il minimo indispensabile fino ad assorbimento totale.",
+        "Formare un panetto, avvolgere in pellicola. Riposo obbligatorio in frigorifero minimo 1 ora.",
+        "PLASTIFICAZIONE — chiave del successo: la frolla fredda si spacca se stesa subito. Spezzettarla in piccoli pezzi e lavorarla brevemente a mano sul piano fino a renderla malleabile e raffinata.",
+        "Stendere a 3mm tra due fogli di carta forno. Cuocere a 170°C statico per 16-18 minuti fino a doratura uniforme."
+      ],
+      "notes": "Le grammature sono standard professionali (la fonte YouTube non le specifica). La plastificazione è il passaggio critico: senza di essa la frolla si spacca sempre. Shelf life: 5 giorni in contenitore ermetico.",
+      "tags": [
+        "frolla",
+        "base",
+        "tecnica",
+        "plastificazione",
+        "leopardi",
+        "recanati"
+      ],
+      "fav": false,
+      "sourceUrl": "",
+      "nlm_source_id": "a76324e0-11a7-48d0-a90e-ffe7a8fd30fa",
+      "createdAt": "2026-04-10T07:59:47.248678"
+    },
+    {
+      "id": "e8ef3967-f1cc-4e83-96fa-a7550e8d111e",
+      "name": "Pasticciotto del Sabato del Villaggio",
+      "leopardi_poem": "Il Sabato del Villaggio",
+      "literary_citation": "«Garzoncello scherzoso, / cotesta età fiorita / è come un giorno d'allegrezza pieno.»",
+      "music_qr": "Nino Rota – La Strada, tema di Gelsomina (1954)",
+      "sinesthetic_note": "Guscio friabile che cede sotto le dita come argilla secca al sole del Salento. Crema vellutata color tuorlo, profumo di limone e vaniglia che sa di festa imminente.",
+      "category": "monoporzioni",
+      "emoji": "🏺",
+      "difficulty": "intermedio",
+      "prep": 40,
+      "cook": 20,
+      "servings": 20,
+      "ingredients": [
+        {
+          "name": "farina 00 (frolla)",
+          "amount": 330,
+          "unit": "g"
+        },
+        {
+          "name": "strutto (o burro morbido)",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "name": "uovo intero medio (frolla)",
+          "amount": 1,
+          "unit": "pz"
+        },
+        {
+          "name": "tuorli piccoli (frolla)",
+          "amount": 2,
+          "unit": "pz"
+        },
+        {
+          "name": "tuorlo per pennellare",
+          "amount": 1,
+          "unit": "pz"
+        },
+        {
+          "name": "zucchero semolato (frolla)",
+          "amount": 130,
+          "unit": "g"
+        },
+        {
+          "name": "buccia grattugiata di limone",
+          "amount": 1,
+          "unit": "pz"
+        },
+        {
+          "name": "estratto di vaniglia (frolla)",
+          "amount": 1,
+          "unit": "tsp"
+        },
+        {
+          "name": "lievito per dolci",
+          "amount": 0.5,
+          "unit": "tsp"
+        },
+        {
+          "name": "latte intero fresco (crema)",
+          "amount": 500,
+          "unit": "ml"
+        },
+        {
+          "name": "tuorli medi freschissimi (crema)",
+          "amount": 6,
+          "unit": "pz"
+        },
+        {
+          "name": "zucchero (crema)",
+          "amount": 150,
+          "unit": "g"
+        },
+        {
+          "name": "fecola di patate",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "name": "estratto di vaniglia (crema)",
+          "amount": 1,
+          "unit": "tbsp"
+        }
+      ],
+      "steps": [
+        "FROLLA: montare strutto (o burro morbido) con zucchero, sale e vaniglia fino a crema spumosa. Aggiungere le uova una alla volta a velocità alta.",
+        "Versare farina e lievito setacciati in un sol colpo. Compattare con spatola poi a mano il minimo necessario — non deve attaccare. Avvolgere in pellicola e riporre in frigo 2 ore.",
+        "CREMA: montare tuorli + zucchero + vaniglia con fruste elettriche per 3 minuti (composto gonfio e spumoso). Aggiungere la fecola continuando a montare.",
+        "Scaldare il latte con vaniglia. Quando arriva a ebollizione abbassare la fiamma. Versare lentamente sul composto di tuorli girando rapidamente. Spegnere il fuoco non appena si addensa.",
+        "Versare la crema in ciotola, coprire con pellicola a contatto. Far raffreddare completamente a temperatura ambiente.",
+        "ASSEMBLAGGIO: imburrare e infarinare gli stampi da pasticciotto. Stendere la frolla fredda a 3mm. Foderare ogni stampo facendo aderire bene alle pareti. Bucare la base con forchetta.",
+        "Riempire completamente con crema a sac à poche fino al bordo — al centro aggiungere un po' più di prodotto per formare la cupola caratteristica.",
+        "Chiudere con un disco di frolla. Sigillare i bordi premendo con l'indice. Pennellare con tuorlo sbattuto.",
+        "Cuocere in forno statico già caldo a 180°C nella parte media per circa 20 minuti fino a doratura. Sfornare, attendere 10 minuti negli stampi poi trasferire su gratella.",
+        "Conservazione: temperatura ambiente 1 giorno, in frigo massimo 2 giorni, oppure congelare."
+      ],
+      "notes": "La variante originale salentina usa lo strutto per una frolla più friabile. La fecola di patate (non amido di mais) dà una crema più vellutata. Servire tiepido o a temperatura ambiente — mai freddo di frigo. Resa: circa 20 pezzi con stampi classici.",
+      "tags": [
+        "pasticciotto",
+        "lecce",
+        "salento",
+        "frolla",
+        "crema pasticcera",
+        "monoporzioni",
+        "leopardi",
+        "tradizione"
+      ],
+      "fav": false,
+      "sourceUrl": "https://www.tavolartegusto.it/ricetta/pasticciotto-ricetta-originale-pasticciotti-leccesi/",
+      "nlm_source_id": "555e6f92-c059-4c4d-afe8-237f2d218b16",
+      "createdAt": "2026-04-10T07:59:47.248678"
+    }
+  ]
+}
