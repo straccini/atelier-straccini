@@ -1588,7 +1588,8 @@ function _resetAiSheet(){
   document.getElementById('aiNote').value='';
   document.getElementById('aiStatusBox').style.display='none';
   document.getElementById('aiPreviewBox').innerHTML='';
-
+  _aiPendingRecord = null;
+  _aiPendingSec = null;
 }
 
 function _buildSysPrompt(sec){
@@ -1653,8 +1654,12 @@ async function runAI(){
   document.getElementById('aiRunBtn').disabled=false;
 }
 
+let _aiPendingRecord = null;
+let _aiPendingSec = null;
 function _showAiPreview(r, sec){
   const prevBox = document.getElementById('aiPreviewBox');
+  _aiPendingRecord = r;
+  _aiPendingSec = sec;
   const nome = r.nome || r.name || '—';
   const cat  = r.category || r.categoria || r.cat || '';
   const meta = [];
@@ -1677,12 +1682,14 @@ function _showAiPreview(r, sec){
         <span class="src-chip">${(r.steps||r.procedimento||[]).length} fasi</span>
         ${(r.tags||[]).map(t=>`<span class="src-chip">${esc(t)}</span>`).join('')}
       </div>
-      <button class="btn-save" style="margin-top:.7rem;padding:.65rem" onclick="_archiviaAI(${JSON.stringify(JSON.stringify(r))}, '${sec}')">💾 Archivia questa ricetta</button>
+      <button class="btn-save" style="margin-top:.7rem;padding:.65rem" onclick="_archiviaAI()">💾 Archivia questa ricetta</button>
     </div>`;
 }
 
-function _archiviaAI(rJson, sec){
-  const r = JSON.parse(rJson);
+function _archiviaAI(){
+  if(!_aiPendingRecord){toast('Nessuna anteprima da archiviare');return;}
+  const r = JSON.parse(JSON.stringify(_aiPendingRecord));
+  const sec = _aiPendingSec;
   r.id = genId();
   if(sec==='md'){
     r.dataCreazione = new Date().toISOString();
@@ -1704,6 +1711,8 @@ function _archiviaAI(rJson, sec){
   }
   closeSh('ai');
   toast('✓ Ricetta archiviata: '+( r.nome||r.name));
+  _aiPendingRecord = null;
+  _aiPendingSec = null;
 }
 
 // ── URL / Source direct import ──
