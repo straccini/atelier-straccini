@@ -1,6 +1,6 @@
 // Atelier Sinestetico — Service Worker v1.0
 // Strategia: cache-first per asset statici, network-first per i dati GAS
-const VERSION = 'atelier-v5-2026-04';
+const VERSION = 'atelier-v5.0.1-2026-04';
 const STATIC_CACHE = 'static-' + VERSION;
 const RUNTIME_CACHE = 'runtime-' + VERSION;
 
@@ -9,8 +9,7 @@ const STATIC_ASSETS = [
   './manifest.json',
   'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,600&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=DM+Sans:wght@300;400;500;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
-  'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
 ];
 
 self.addEventListener('install', evt => {

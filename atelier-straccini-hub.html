@@ -13,7 +13,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,600&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
 :root{
   --navy:#0C1B33;--navy2:#1A2E4A;--steel:#2B5FAC;--steel2:#4A7FC1;
@@ -1067,22 +1066,12 @@ function updMdSub(){
   if(!c||!MD_SUBS[c]){s.innerHTML='<option value="">—</option>';return;}
   s.innerHTML='<option value="">—</option>'+Object.entries(MD_SUBS[c]).map(([k,v])=>`<option value="${k}">${k} · ${v}</option>`).join('');
 }
-let _qrSeq=0;
 function makeQR(url,size){
   if(!url)return '';
-  size=size||48;
-  const id='qr_'+(++_qrSeq);
-  // Rende QR reale usando libreria qrcode.min.js dopo il paint
-  setTimeout(()=>{
-    const el=document.getElementById(id);
-    if(!el||!window.QRCode)return;
-    try{
-      QRCode.toCanvas(url,{width:size,margin:0,color:{dark:'#0C1B33',light:'#F0F3F7'}},(err,canvas)=>{
-        if(!err&&canvas){el.innerHTML='';el.appendChild(canvas);canvas.style.width=size+'px';canvas.style.height=size+'px';}
-      });
-    }catch(e){console.warn('QR:',e);}
-  },50);
-  return `<a href="${esc(url)}" target="_blank" rel="noopener" class="qr-link" id="${id}" title="Apri risorsa" aria-label="Scansiona o apri: ${esc(url.slice(0,50))}" style="width:${size}px;height:${size}px;display:inline-flex;align-items:center;justify-content:center;background:var(--pearl);border:1px solid var(--silver);flex-shrink:0">⋯</a>`;
+  size=size||56;
+  // QR reale via API pubblica — nessuna libreria JS da caricare
+  const src='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&margin=0&data='+encodeURIComponent(url);
+  return `<a href="${esc(url)}" target="_blank" rel="noopener" title="Apri risorsa" aria-label="Scansiona o apri: ${esc(url.slice(0,50))}" style="width:${size}px;height:${size}px;display:inline-flex;flex-shrink:0;background:var(--pearl);border:1px solid var(--silver)"><img src="${src}" alt="" width="${size}" height="${size}" loading="lazy" style="display:block" onerror="this.parentNode.innerHTML='⋯'"></a>`;
 }
 function renderMd(){
   const data=FILT.md==='all'?D.medolce:D.medolce.filter(r=>r.categoria===FILT.md);
