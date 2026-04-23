@@ -517,12 +517,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     </div>
     <div class="auth-logo">Atelier <em>Sinestetico</em></div>
     <div class="auth-sub">Hub Gastronomico · Italia Centrale</div>
-    <label class="auth-label" for="authEmail">La tua email</label>
+    <label class="auth-label" for="authEmail">Email</label>
     <input id="authEmail" class="auth-input" type="email" placeholder="nome@esempio.com" autocomplete="email">
+    <label class="auth-label" for="authPw">Password</label>
+    <input id="authPw" class="auth-input" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <div class="auth-err" id="authErr"></div>
-    <button class="auth-btn" onclick="doLogin()">Accedi come editor</button>
+    <button class="auth-btn" onclick="doLogin()">Accedi come admin</button>
     <button class="auth-btn-ghost" onclick="continueAsReader()">Continua come lettore</button>
-    <div class="auth-note">Gli editor sono autorizzati dall'amministratore.<br>I lettori possono sfogliare tutti i contenuti.</div>
+    <div class="auth-note">Solo gli admin possono caricare e modificare contenuti.<br>I lettori possono sfogliare tutti i contenuti.</div>
   </div>
 </div>
 
@@ -611,7 +613,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="sc-body">
         <div class="sc-kicker">03 · Archivio</div>
         <div class="sc-name">Il Ricettario</div>
-        <div class="sc-desc">Archivio di famiglia · Tradizione, tecnica, memoria</div>
+        <div class="sc-desc">Piatti veri, finti e immaginari · Tradizione, tecnica, memoria</div>
         <div class="sc-cnt rc" id="cntRc" style="display:none">0 ricette</div>
       </div>
       <div class="sc-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
@@ -690,7 +692,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <!-- RICETTARIO -->
 <div class="view" id="vRc">
   <div class="sec-top">
-    <div><div class="sec-ttl">Il Ricettario</div><div class="sec-sub">Archivio di famiglia</div></div>
+    <div><div class="sec-ttl">Il Ricettario</div><div class="sec-sub">Piatti veri, finti e immaginari</div></div>
     <div class="sec-actions">
       <button class="btn-add" style="background:var(--paper);color:var(--ink);font-size:.58rem;padding:.5rem .7rem" onclick="openSrcImport()">↗ URL</button>
       <button class="btn-add" style="background:var(--paper);color:var(--rc);border-color:var(--rc);font-size:.58rem;padding:.5rem .7rem" onclick="openAiRc()">✦ AI</button>
@@ -977,12 +979,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="set-sub">Invia tutti i dati locali al backend. Da fare dopo ogni importazione JSON.</div>
       <button class="btn-cloud" onclick="gasBulkSync()">☁ Sincronizza tutto su Sheets</button>
     </div>
-    <div class="set-sep">Migrazione</div>
-    <div class="set-row">
-      <div class="set-lbl">Importa Ricettario precedente</div>
-      <div class="set-sub">Importa le ricette dalla vecchia app (<code>rfam_v3</code>).</div>
-      <button class="btn-mig" onclick="migrateOld()">↑ Importa da app precedente</button>
-    </div>
     <div class="set-sep">Backup</div>
     <div class="set-grid">
       <button class="btn-tool" onclick="exportJSON()">⬇ Esporta JSON</button>
@@ -1002,15 +998,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         </div>
       </div>
     </div>
-    <div class="set-sep">Guida</div>
-    <div class="set-guide">
-      <p>1. <a href="https://script.google.com" target="_blank">script.google.com</a> → incolla <strong>Code.gs</strong></p>
-      <p>2. Distribuisci → App Web → Accesso: <strong>Chiunque</strong></p>
-      <p>3. Copia URL <code>/exec</code> → incolla sopra → testa</p>
-      <p>4. Importa JSON → Sincronizza su Sheets</p>
-    </div>
     <div id="loginFromSet" style="margin-top:1rem;text-align:center;display:none">
-      <button class="btn-tool" onclick="closeSh('set');showAuth()" style="width:100%">Accedi come editor</button>
+      <button class="btn-tool" onclick="closeSh('set');showAuth()" style="width:100%">Accedi come admin</button>
     </div>
     <div style="margin-top:1.4rem;padding-top:1rem;border-top:1.5px solid var(--line);font-family:var(--font-m);font-size:.65rem;color:var(--mute);text-align:center;letter-spacing:.12em">ATELIER SINESTETICO · v7.0 · PWA · WCAG AA</div>
   </div>
@@ -1089,7 +1078,7 @@ const SEC_KEYS={md:'medolce',gf:'gastronomia',rc:'ricettario'};
 const SEC_LABELS={md:"M'è dolce",gf:'Gastronomia di Frontiera',rc:'Ricettario'};
 const VIEWS={home:'vHome',md:'vMd',gf:'vGf',rc:'vRc'};
 const BNS={home:'bnHome',md:'bnMd',gf:'bnGf',rc:'bnRc'};
-const TAGS={home:'Hub Gastronomico · Italia Centrale',md:"M'è dolce · Recanati",gf:'Gastronomia di Frontiera · Italia',rc:'Ricettario di Famiglia'};
+const TAGS={home:'Hub Gastronomico · Italia Centrale',md:"M'è dolce · Recanati",gf:'Gastronomia di Frontiera · Italia',rc:'Piatti veri, finti e immaginari'};
 
 // ═══════════════════════════════════════════════════
 //  STORAGE
@@ -1313,7 +1302,7 @@ async function saveMd(){
   const existId=document.getElementById('md_id').value,isEdit=!!existId,id=existId||genId();
   const orig=isEdit?(D.medolce.find(x=>x.id===id)||{}):{};
   const r={id,nome,codice:document.getElementById('md_cod').value.trim(),categoria:cat,sottocategoria:document.getElementById('md_sub').value,descrizione:document.getElementById('md_desc').value.trim(),ingredienti:parseMdIngs(document.getElementById('md_ings').value),procedimento:document.getElementById('md_proc').value.split('\n').filter(Boolean),note:document.getElementById('md_note').value.trim(),abbinamento:document.getElementById('md_abbi').value.trim(),musica:document.getElementById('md_music').value.trim(),audioUrl:document.getElementById('md_url').value.trim(),citazione:document.getElementById('md_cit').value.trim(),fonte:document.getElementById('md_fonte').value.trim(),dataCreazione:orig.dataCreazione||new Date().toISOString()};
-  if(isEdit){const i=D.medolce.findIndex(x=>x.id===id);D.medolce[i]=r;gasPost('update','medolce',r,id);}
+  if(isEdit){const i=D.medolce.findIndex(x=>x.id===id);if(i>=0)D.medolce[i]=r;else D.medolce.unshift(r);gasPost('update','medolce',r,id);}
   else{D.medolce.unshift(r);gasPost('add','medolce',r);}
   saveLocal();closeSh('md');renderMd();updCounts();toast(isEdit?'Aggiornata':'Archiviata');
 }
@@ -1452,7 +1441,7 @@ async function saveGf(){
   const existId=document.getElementById('gf_id').value,isEdit=!!existId,id=existId||genId();
   const orig=isEdit?(D.gastronomia.find(x=>x.id===id)||{}):{};
   const r={id,nome,tipo:document.getElementById('gf_tipo').value,regione:reg,citta:document.getElementById('gf_citta').value.trim(),cat:document.getElementById('gf_cat').value,descrizione:document.getElementById('gf_desc').value.trim(),ingredienti:document.getElementById('gf_ings').value.split('\n').filter(Boolean),procedimento:document.getElementById('gf_proc').value.split('\n').filter(Boolean),vino:document.getElementById('gf_vino').value.trim(),cantina:document.getElementById('gf_cantina').value.trim(),lat:parseFloat(document.getElementById('gf_lat').value)||null,lng:parseFloat(document.getElementById('gf_lng').value)||null,fotoUrl:document.getElementById('gf_foto').value.trim(),audioUrl:document.getElementById('gf_audio').value.trim(),risorsa_tipo:document.getElementById('gf_ris_tipo').value,risorsa_autore:document.getElementById('gf_ris_autore').value.trim(),risorsa_titolo:document.getElementById('gf_ris_titolo').value.trim(),risorsa_nota:document.getElementById('gf_ris_nota').value.trim(),arte_tipo:document.getElementById('gf_arte_tipo').value,arte_autore:document.getElementById('gf_arte_autore').value.trim(),arte_titolo:document.getElementById('gf_arte_titolo').value.trim(),arte_nota:document.getElementById('gf_arte_nota').value.trim(),fonte:document.getElementById('gf_fonte').value.trim(),dataCreazione:orig.dataCreazione||new Date().toISOString(),updatedAt:new Date().toISOString()};
-  if(isEdit){const i=D.gastronomia.findIndex(x=>x.id===id);D.gastronomia[i]=r;gasPost('update','gastronomia',r,id);}
+  if(isEdit){const i=D.gastronomia.findIndex(x=>x.id===id);if(i>=0)D.gastronomia[i]=r;else D.gastronomia.unshift(r);gasPost('update','gastronomia',r,id);}
   else{D.gastronomia.unshift(r);gasPost('add','gastronomia',r);}
   saveLocal();closeSh('gf');
   if(GF_VIEW==='regioni'){renderRegionGrid();if(CUR_REG)showRegione(CUR_REG);}else renderGf();
@@ -1525,7 +1514,7 @@ async function saveRc(){
   const cat=document.getElementById('rc_cat').value,existId=document.getElementById('rc_id').value,isEdit=!!existId,id=existId||genId();
   const orig=isEdit?(D.ricettario.find(x=>x.id===id)||{}):{};
   const r={id,name:nome,category:cat,emoji:RC_ICO[cat]||'🍽️',difficulty:document.getElementById('rc_dif').value,prep:parseInt(document.getElementById('rc_prep').value)||0,cook:parseInt(document.getElementById('rc_cook').value)||0,servings:parseInt(document.getElementById('rc_srv').value)||4,ingredients:document.getElementById('rc_ings').value.split('\n').filter(Boolean),steps:document.getElementById('rc_proc').value.split('\n').filter(Boolean).map(t=>({text:t,ingredients:[]})),notes:document.getElementById('rc_note').value.trim(),tags:document.getElementById('rc_tags').value.split(',').map(s=>s.trim()).filter(Boolean),sourceUrl:document.getElementById('rc_src').value.trim(),createdAt:orig.createdAt||Date.now()};
-  if(isEdit){const i=D.ricettario.findIndex(x=>x.id===id);D.ricettario[i]=r;gasPost('update','ricettario',r,id);}
+  if(isEdit){const i=D.ricettario.findIndex(x=>x.id===id);if(i>=0)D.ricettario[i]=r;else D.ricettario.unshift(r);gasPost('update','ricettario',r,id);}
   else{D.ricettario.unshift(r);gasPost('add','ricettario',r);}
   saveLocal();closeSh('rc');renderRc();updCounts();toast(isEdit?'Aggiornata':'Archiviata');
 }
@@ -1677,17 +1666,6 @@ async function saveGasUrl(){
 }
 function initGasStatus(){
   if(GAS_URL){document.getElementById('gasUrlIn').value=GAS_URL;document.getElementById('gasDot').className='sdot ok';document.getElementById('gasStat').textContent='URL configurato';}
-}
-async function migrateOld(){
-  try{
-    const old=JSON.parse(localStorage.getItem(OLD_KEY)||'[]');
-    if(!old.length){toast('Nessuna ricetta in rfam_v3');return;}
-    const existing=new Set(D.ricettario.map(r=>r.id));
-    const toAdd=old.filter(r=>!existing.has(r.id));
-    if(!toAdd.length){toast('Già importate');return;}
-    D.ricettario=[...D.ricettario,...toAdd];saveLocal();
-    renderRc();updCounts();toast('✓ Importate '+toAdd.length+' ricette');closeSh('set');goView('rc');
-  }catch(e){toast('Errore: '+e.message);}
 }
 function exportJSON(){
   const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
@@ -1937,10 +1915,12 @@ async function runSrcImport(){
 }
 
 // ═══════════════════════════════════════════════════
-//  AUTH — RUOLI: admin / editor / reader
+//  AUTH — RUOLI: admin / reader
 // ═══════════════════════════════════════════════════
 const AUTH_KEY='atelier_auth_v1';
-const ADMIN_EMAIL_AUTH='s.straccini@gmail.com';
+const ADMIN_EMAILS=['s.straccini@gmail.com','gianlucabellucci22@gmail.com'];
+const ADMIN_PASSWORD='S1nestes!a';
+const ADMIN_NAMES={'s.straccini@gmail.com':'Silvano Straccini','gianlucabellucci22@gmail.com':'Gianluca Bellucci'};
 let ROLE='reader';
 let AUTH_USER=null;
 
@@ -1948,27 +1928,20 @@ function loadAuth(){try{const a=localStorage.getItem(AUTH_KEY);if(a)AUTH_USER=JS
 function saveAuth(u){AUTH_USER=u;localStorage.setItem(AUTH_KEY,JSON.stringify(u));}
 function clearAuth(){AUTH_USER=null;localStorage.removeItem(AUTH_KEY);}
 
-async function verifyEmail(email){
-  if(!GAS_URL)return null;
-  try{
-    const r=await fetch(GAS_URL+'?action=verifica&email='+encodeURIComponent(email),{redirect:'follow'});
-    const j=await r.json();
-    return j.ok?j.utente:null;
-  }catch(e){return null;}
-}
-
 async function doLogin(){
   const email=document.getElementById('authEmail').value.trim().toLowerCase();
+  const pw=document.getElementById('authPw').value;
   const err=document.getElementById('authErr');
   if(!email||!email.includes('@')){err.textContent="Inserisci un'email valida";return;}
-  err.textContent='Verifica in corso...';
-  if(email===ADMIN_EMAIL_AUTH.toLowerCase()){
-    const u={ruolo:'admin',nome:'Silvano Straccini',email};
-    saveAuth(u);applyRole(u);hideAuthScreen();return;
+  if(!pw){err.textContent="Inserisci la password";return;}
+  if(ADMIN_EMAILS.includes(email) && pw===ADMIN_PASSWORD){
+    const u={ruolo:'admin',nome:ADMIN_NAMES[email]||email.split('@')[0],email};
+    saveAuth(u);applyRole(u);hideAuthScreen();
+    document.getElementById('authPw').value='';
+    err.textContent='';
+    return;
   }
-  const utente=await verifyEmail(email);
-  if(utente){saveAuth(utente);applyRole(utente);hideAuthScreen();}
-  else{err.textContent='Email non autorizzata come editor.';}
+  err.textContent='Email o password non corretti.';
 }
 
 function continueAsReader(){
@@ -2060,16 +2033,11 @@ async function init(){
   initGasStatus();
   initEtr();
   registerSW();
-  // Auth: reader di default, nessun login wall
-  if(AUTH_USER&&AUTH_USER.ruolo==='admin'&&AUTH_USER.email===ADMIN_EMAIL_AUTH.toLowerCase()){
-    applyRole(AUTH_USER);
-  } else if(AUTH_USER&&GAS_URL){
-    const utente=await verifyEmail(AUTH_USER.email);
-    if(utente){saveAuth(utente);applyRole(utente);}
-    else{clearAuth();applyRole({ruolo:'reader',nome:'Lettore',email:''});}
-  } else if(AUTH_USER){
+  // Auth: reader di default, nessun login wall. Admin persistito solo se email in whitelist.
+  if(AUTH_USER && AUTH_USER.ruolo==='admin' && ADMIN_EMAILS.includes(String(AUTH_USER.email||'').toLowerCase())){
     applyRole(AUTH_USER);
   } else {
+    clearAuth();
     applyRole({ruolo:'reader',nome:'Lettore',email:''});
   }
   hideAuthScreen();

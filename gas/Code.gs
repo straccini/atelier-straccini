@@ -43,7 +43,8 @@
  * ════════════════════════════════════════════════════════════════ */
 
 // ─── CONFIGURAZIONE ─────────────────────────────────────────────
-const ADMIN_EMAIL = 's.straccini@gmail.com';
+const ADMIN_EMAILS = ['s.straccini@gmail.com', 'gianlucabellucci22@gmail.com'];
+const ADMIN_EMAIL  = ADMIN_EMAILS[0]; // retrocompat alias
 const SECTIONS    = ['medolce', 'gastronomia', 'ricettario', 'notizie'];
 const UTENTI      = 'utenti';
 const CLAUDE_MODEL = 'claude-sonnet-4-6';
@@ -250,11 +251,16 @@ function _genId() {
 }
 
 // ─── UTENTI / AUTORIZZAZIONI ──────────────────────────────────
+const ADMIN_NAMES = {
+  's.straccini@gmail.com': 'Silvano Straccini',
+  'gianlucabellucci22@gmail.com': 'Gianluca Bellucci'
+};
+
 function verifyEmail(email) {
   if (!email) return null;
   const norm = String(email).toLowerCase().trim();
-  if (norm === ADMIN_EMAIL.toLowerCase()) {
-    return { email: norm, nome: 'Silvano Straccini', ruolo: 'admin' };
+  if (ADMIN_EMAILS.map(e => e.toLowerCase()).indexOf(norm) >= 0) {
+    return { email: norm, nome: ADMIN_NAMES[norm] || norm.split('@')[0], ruolo: 'admin' };
   }
   const sh = _sheet(UTENTI);
   const last = sh.getLastRow();
