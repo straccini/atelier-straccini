@@ -1060,7 +1060,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 //  CONFIG & STATE
 // ═══════════════════════════════════════════════════
 const LS_KEY='atelier_hub_v2', GAS_KEY='atelier_gas_url', OLD_KEY='rfam_v3';
-let GAS_URL=localStorage.getItem(GAS_KEY)||'';
+// URL backend di default: i lettori vedono subito i contenuti senza configurare nulla.
+// Gli admin possono comunque sovrascriverlo dalle Impostazioni (ha precedenza localStorage).
+const GAS_URL_DEFAULT='https://script.google.com/macros/s/AKfycbxDtY-4LhjAQpsVGSI2nV83_c5mSp1CVAkpWDOuO4Mq-Rzbl3XK8J60aiV0DzQsFGF8/exec';
+let GAS_URL=localStorage.getItem(GAS_KEY)||GAS_URL_DEFAULT;
 let D={medolce:[],gastronomia:[],ricettario:[],notizie:[]};
 let FILT={md:'all',gf:'all',rc:'all'};
 let GF_VIEW='regioni', CUR_REG=null, GF_MAP=null, GF_MARKERS=[];
