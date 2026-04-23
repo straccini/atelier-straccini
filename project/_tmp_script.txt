@@ -1,0 +1,1016 @@
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIG & STATE
+// ═══════════════════════════════════════════════════
+const LS_KEY='atelier_hub_v2', GAS_KEY='atelier_gas_url', OLD_KEY='rfam_v3';
+let GAS_URL=localStorage.getItem(GAS_KEY)||'';
+let D={medolce:[],gastronomia:[],ricettario:[],notizie:[]};
+let FILT={md:'all',gf:'all',rc:'all'};
+let GF_VIEW='regioni', CUR_REG=null, GF_MAP=null, GF_MARKERS=[];
+
+const MD_SUBS={
+  A:{A1:'Praline con guscio',A2:'Cioccolatini ripieni',A3:'Tartufi & Rocher',A4:'Tavolette monorigine',A5:'Tavolette con inclusi'},
+  B:{B1:'Monoporzioni & Entremet',B2:'Petits fours & Mignardises',B3:'Biscotteria fine',B4:'Caramelle & Confetteria'},
+  C:{C1:'Ganache & Ripieni',C2:'Pralinati & Croccanti',C3:'Gelatine, Composte & Coulis',C4:'Aromi, Infusioni & Spezie',C5:'Elementi Innovativi',C6:'Biscotti Base & Fondi'}
+};
+const RC_ICO={'🍝 Primi':'🍝','🥩 Secondi':'🥩','🫒 Antipasti':'🫒','🍫 Dolci':'🍫','🍞 Pane & Lievitati':'🍞','🥗 Contorni':'🥗','🍹 Bevande':'🍹'};
+const REGIONI=['Marche','Umbria','Abruzzo','Lazio','Toscana','Emilia-Romagna','Campania','Puglia','Sicilia','Sardegna','Piemonte','Lombardia','Veneto','Liguria','Calabria','Basilicata','Molise','Friuli-Venezia Giulia','Trentino-Alto Adige',"Valle d'Aosta"];
+const FOCUS_REG=['Marche','Umbria','Abruzzo'];
+const GF_TYPE_LABELS={piatto:'Piatto',ristorante:'Ristorante',vino:'Vino',produttore:'Produttore',mercato:'Mercato'};
+const SEC_KEYS={md:'medolce',gf:'gastronomia',rc:'ricettario'};
+const SEC_LABELS={md:"M'è dolce",gf:'Gastronomia di Frontiera',rc:'Ricettario'};
+const VIEWS={home:'vHome',md:'vMd',gf:'vGf',rc:'vRc'};
+const BNS={home:'bnHome',md:'bnMd',gf:'bnGf',rc:'bnRc'};
+const TAGS={home:'Hub Gastronomico · Italia Centrale',md:"M'è dolce · Recanati",gf:'Gastronomia di Frontiera · Italia',rc:'Ricettario di Famiglia'};
+
+// ═══════════════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════════════
+function loadLocal(){try{const r=localStorage.getItem(LS_KEY);if(r)D={...D,...JSON.parse(r)};}catch(e){}}
+function saveLocal(){localStorage.setItem(LS_KEY,JSON.stringify(D));}
+function genId(){return Date.now().toString(36).toUpperCase()+Math.random().toString(36).substr(2,5).toUpperCase();}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ═══════════════════════════════════════════════════
+//  AUTO-SYNC (GAS)
+// ═══════════════════════════════════════════════════
+function setSyncState(state){
+  const d=document.getElementById('syncDot');
+  d.className='sync-dot'+(state?' '+state:'');
+}
+
+async function gasGet(section){
+  if(!GAS_URL)return null;
+  try{
+    const r=await fetch(GAS_URL+'?section='+section,{method:'GET',redirect:'follow'});
+    const j=await r.json();
+    return j.ok?j.data:null;
+  }catch(e){return null;}
+}
+
+async function gasPost(action,section,data,id,extra){
+  if(!GAS_URL)return {ok:false,error:'GAS non configurato'};
+  // Content-Type text/plain evita il preflight CORS; GAS risponde con CORS *
+  try{
+    const body=Object.assign({action,section,data,id},extra||{});
+    const r=await fetch(GAS_URL,{
+      method:'POST',
+      redirect:'follow',
+      body:JSON.stringify(body),
+      headers:{'Content-Type':'text/plain;charset=utf-8'}
+    });
+    const j=await r.json();
+    if(!j.ok)console.warn('GAS POST '+action+':',j.error);
+    return j;
+  }catch(e){
+    console.warn('GAS POST error:',e);
+    return {ok:false,error:e.message};
+  }
+}
+
+async function syncAll(){
+  if(!GAS_URL){setSyncState('');return;}
+  setSyncState('loading');
+  let ok=true, updated=false;
+  for(const key of ['medolce','gastronomia','ricettario','notizie']){
+    const r=await gasGet(key);
+    if(r&&Array.isArray(r)){
+      // Merge: prendi il cloud come fonte di verita
+      // ma mantieni record locali che non sono ancora su cloud (id non presente)
+      const cloudIds=new Set(r.map(x=>String(x.id)));
+      const localOnly=(D[key]||[]).filter(x=>!cloudIds.has(String(x.id)));
+      D[key]=[...r,...localOnly];
+      updated=true;
+    } else if(r===null){ ok=false; }
+  }
+  if(updated) saveLocal();
+  setSyncState(ok?'ok':'err');
+  return ok;
+}
+
+async function syncSection(key){
+  if(!GAS_URL)return false;
+  const r=await gasGet(key);
+  if(r&&Array.isArray(r)&&r.length>0){D[key]=r;saveLocal();return true;}
+  return false;
+}
+
+async function gasBulkSync(){
+  if(!GAS_URL){toast('Configura prima il backend nelle Impostazioni');return;}
+  setSyncState('loading');
+  toast('Sincronizzazione in corso...');
+  const secs=['medolce','gastronomia','ricettario','notizie'];
+  let tot=0,err=0;
+  for(const key of secs){
+    if(D[key]&&D[key].length>0){
+      const res=await gasPost('bulkAdd',key,D[key]);
+      if(res.ok)tot+=D[key].length;else err++;
+    }
+  }
+  setSyncState(err?'err':'ok');
+  toast(err?`⚠ ${tot} caricate, ${err} errori`:`✓ Sincronizzate ${tot} voci su Google Sheets`);
+}
+
+// Auto-refresh every 5 minutes
+setInterval(()=>{if(GAS_URL)syncAll().then(()=>renderCurrent());},5*60*1000);
+
+// ═══════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════
+let _curView='home';
+function renderCurrent(){
+  if(_curView==='home')renderHome();
+  else if(_curView==='md')renderMd();
+  else if(_curView==='gf')renderGf();
+  else if(_curView==='rc')renderRc();
+}
+
+function goView(v){
+  Object.values(VIEWS).forEach(id=>document.getElementById(id).classList.remove('on'));
+  Object.values(BNS).forEach(id=>{const el=document.getElementById(id);el.classList.remove('on');el.removeAttribute('aria-current');});
+  document.getElementById(VIEWS[v]).classList.add('on');
+  const bn=document.getElementById(BNS[v]);
+  bn.classList.add('on');bn.setAttribute('aria-current','page');
+  document.getElementById('hdrTag').textContent=TAGS[v]||'';
+  _curView=v; window.scrollTo(0,0);
+  if(v==='home'){renderHome();syncAll().then(()=>renderHome());}
+  if(v==='md'){renderMd();syncSection('medolce').then(ok=>ok&&renderMd());}
+  if(v==='gf'){renderGf();syncSection('gastronomia').then(ok=>ok&&renderGf());}
+  if(v==='rc'){renderRc();syncSection('ricettario').then(ok=>ok&&renderRc());}
+}
+
+// ═══════════════════════════════════════════════════
+//  HOME
+// ═══════════════════════════════════════════════════
+function renderHome(){
+  document.getElementById('homeDate').textContent=new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  updCounts();renderNews();
+}
+function updCounts(){
+  document.getElementById('cntMd').textContent=D.medolce.length+' ricette';
+  document.getElementById('cntGf').textContent=D.gastronomia.length+' referenze';
+  document.getElementById('cntRc').textContent=D.ricettario.length+' ricette';
+}
+function renderNews(){
+  const el=document.getElementById('newsFeed');
+  if(!D.notizie.length){el.innerHTML=`<div class="empty"><div class="empty-ico"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="empty-t">Nessuna nota ancora</div><div class="empty-s">Aggiungi note, articoli o aggiornamenti.</div></div>`;return;}
+  el.innerHTML=[...D.notizie].sort((a,b)=>new Date(b.data||0)-new Date(a.data||0)).map(n=>`<div class="news-item" onclick="openNewsDet('${n.id}')"><div class="news-cat">${esc(n.categoria||'Nota')}${n.fonte?' · '+esc(n.fonte):''}</div><div class="news-ttl">${esc(n.titolo||'')}</div>${n.testo?`<div class="news-prev">${esc(n.testo)}</div>`:''}<div class="news-date">${n.data?new Date(n.data).toLocaleDateString('it-IT'):''}</div></div>`).join('');
+}
+async function saveNews(){
+  const t=document.getElementById('nw_tit').value.trim();if(!t){toast('Inserisci un titolo');return;}
+  const n={id:genId(),titolo:t,categoria:document.getElementById('nw_cat').value,fonte:document.getElementById('nw_fonte').value.trim(),testo:document.getElementById('nw_txt').value.trim(),url:document.getElementById('nw_url').value.trim(),data:new Date().toISOString()};
+  D.notizie.unshift(n);saveLocal();gasPost('add','notizie',n);
+  closeSh('news');renderNews();['nw_tit','nw_fonte','nw_txt','nw_url'].forEach(id=>document.getElementById(id).value='');
+  toast('Nota pubblicata');
+}
+function openNewsDet(id){
+  const n=D.notizie.find(x=>x.id===id);if(!n)return;
+  document.getElementById('detLabel').textContent=n.categoria||'Nota';
+  document.getElementById('detBody').innerHTML=`<div class="det-body"><div style="font-size:.56rem;color:var(--fog);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.4rem">${n.data?new Date(n.data).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):''} ${n.fonte?'· '+esc(n.fonte):''}</div><div class="det-ttl" style="color:var(--navy)">${esc(n.titolo)}</div>${n.testo?`<div style="font-family:var(--font-b);font-size:.92rem;line-height:1.75;margin-top:.7rem">${esc(n.testo)}</div>`:''} ${n.url?`<a href="${n.url}" target="_blank" style="display:inline-block;margin-top:.8rem;font-size:.72rem;color:var(--steel);border-bottom:1px solid">Fonte →</a>`:''}<div class="det-acts" style="grid-template-columns:1fr"><button class="det-btn danger" onclick="delNews('${n.id}')">🗑 Elimina</button></div></div>`;
+  openSh('det');
+}
+async function delNews(id){if(!confirm('Eliminare?'))return;D.notizie=D.notizie.filter(x=>x.id!==id);saveLocal();gasPost('delete','notizie',null,id);closeSh('det');renderNews();toast('Eliminata');}
+
+// ═══════════════════════════════════════════════════
+//  FILTER TABS
+// ═══════════════════════════════════════════════════
+function filtTab(sec,val,btn){
+  FILT[sec]=val;
+  const tabsId={md:'tabsMd',gf:'tabsGf',rc:'tabsRc'}[sec];
+  document.querySelectorAll('#'+tabsId+' .ftab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(sec==='md')renderMd();if(sec==='gf')renderGf();if(sec==='rc')renderRc();
+}
+
+// ═══════════════════════════════════════════════════
+//  M'È DOLCE
+// ═══════════════════════════════════════════════════
+function updMdSub(){
+  const c=document.getElementById('md_cat').value,s=document.getElementById('md_sub');
+  if(!c||!MD_SUBS[c]){s.innerHTML='<option value="">—</option>';return;}
+  s.innerHTML='<option value="">—</option>'+Object.entries(MD_SUBS[c]).map(([k,v])=>`<option value="${k}">${k} · ${v}</option>`).join('');
+}
+function makeQR(url,size){
+  if(!url)return '';
+  size=size||56;
+  // QR reale via API pubblica — nessuna libreria JS da caricare
+  const src='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&margin=0&data='+encodeURIComponent(url);
+  return `<a href="${esc(url)}" target="_blank" rel="noopener" title="Apri risorsa" aria-label="Scansiona o apri: ${esc(url.slice(0,50))}" style="width:${size}px;height:${size}px;display:inline-flex;flex-shrink:0;background:var(--pearl);border:1px solid var(--silver)"><img src="${src}" alt="" width="${size}" height="${size}" loading="lazy" style="display:block" onerror="this.parentNode.innerHTML='⋯'"></a>`;
+}
+function renderMd(){
+  const data=FILT.md==='all'?D.medolce:D.medolce.filter(r=>r.categoria===FILT.md);
+  const el=document.getElementById('listMd');
+  if(!data.length){el.innerHTML=`<div class="empty"><div class="empty-ico"><svg viewBox="0 0 24 24"><path d="M12 3c-2 0-5 2-5 6s2 8 5 10c3-2 5-6 5-10s-3-6-5-6z"/><path d="M12 3v16M7 9h10"/></svg></div><div class="empty-t">Nessuna ricetta ancora</div><div class="empty-s">Aggiungi la prima ricetta M'è dolce.</div><button class="btn-empty" onclick="openAddMd()">+ Nuova ricetta</button></div>`;return;}
+  el.innerHTML=data.map(r=>{
+    const sub=(r.categoria&&MD_SUBS[r.categoria]&&r.sottocategoria)?MD_SUBS[r.categoria][r.sottocategoria]:'';
+    const cit=r.citazione?(r.citazione.length>70?r.citazione.substr(0,70)+'…':r.citazione):'';
+    return `<div class="md-card" onclick="openDet('${r.id}','md')">
+      <div class="md-card-top">
+        <div class="md-sub">${esc(r.categoria||'')}${sub?' · '+esc(sub):''}</div>
+        <div class="md-name">${esc(r.nome||'')}</div>
+        ${cit?`<div class="md-cit">${esc(cit)}</div>`:''}
+      </div>
+      <div class="md-body"><div class="md-desc">${esc(r.descrizione||'')}</div></div>
+      <div class="md-foot">
+        <div class="md-music">${r.musica?`<svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:var(--gold);fill:none;stroke-width:1.5;vertical-align:middle;margin-right:3px"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>${esc(r.musica)}`:'&nbsp;'}</div>
+        ${r.audioUrl||r.url?makeQR(r.audioUrl||r.url):''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function openAddMd(){
+  document.getElementById('md_id').value='';document.getElementById('mdShTtl').textContent="Nuova Ricetta M'è dolce";
+  ['md_nome','md_cod','md_desc','md_ings','md_proc','md_note','md_abbi','md_music','md_url','md_cit','md_fonte'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('md_cat').value='';document.getElementById('md_sub').innerHTML='<option value="">—</option>';
+  document.getElementById('md_delBtn').style.display='none';openSh('md');
+}
+function openEditMd(id){
+  const r=D.medolce.find(x=>x.id===id);if(!r)return;
+  document.getElementById('md_id').value=id;document.getElementById('mdShTtl').textContent='Modifica · '+r.nome;
+  document.getElementById('md_nome').value=r.nome||'';document.getElementById('md_cod').value=r.codice||'';
+  document.getElementById('md_cat').value=r.categoria||'';updMdSub();document.getElementById('md_sub').value=r.sottocategoria||'';
+  document.getElementById('md_desc').value=r.descrizione||'';
+  document.getElementById('md_ings').value=(r.ingredienti||[]).map(i=>`${i.nome||i} | ${i.peso||''} | ${i.pct||''}`).join('\n');
+  document.getElementById('md_proc').value=(r.procedimento||[]).join('\n');
+  document.getElementById('md_note').value=r.note||'';document.getElementById('md_abbi').value=r.abbinamento||'';
+  document.getElementById('md_music').value=r.musica||'';document.getElementById('md_url').value=r.audioUrl||r.url||'';
+  document.getElementById('md_cit').value=r.citazione||'';document.getElementById('md_fonte').value=r.fonte||'';
+  document.getElementById('md_delBtn').style.display='block';openSh('md');
+}
+function parseMdIngs(raw){return raw.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|').map(s=>s.trim());return{nome:p[0]||'',peso:parseFloat(p[1])||0,pct:parseFloat(p[2])||0,unita:'g'};});}
+async function saveMd(){
+  if(ROLE==='reader'){toast('Accedi come editor — ⚙️ Impostazioni');return;}
+  const nome=document.getElementById('md_nome').value.trim(),cat=document.getElementById('md_cat').value;
+  if(!nome||!cat){toast('Nome e categoria obbligatori');return;}
+  const existId=document.getElementById('md_id').value,isEdit=!!existId,id=existId||genId();
+  const orig=isEdit?(D.medolce.find(x=>x.id===id)||{}):{};
+  const r={id,nome,codice:document.getElementById('md_cod').value.trim(),categoria:cat,sottocategoria:document.getElementById('md_sub').value,descrizione:document.getElementById('md_desc').value.trim(),ingredienti:parseMdIngs(document.getElementById('md_ings').value),procedimento:document.getElementById('md_proc').value.split('\n').filter(Boolean),note:document.getElementById('md_note').value.trim(),abbinamento:document.getElementById('md_abbi').value.trim(),musica:document.getElementById('md_music').value.trim(),audioUrl:document.getElementById('md_url').value.trim(),citazione:document.getElementById('md_cit').value.trim(),fonte:document.getElementById('md_fonte').value.trim(),dataCreazione:orig.dataCreazione||new Date().toISOString()};
+  if(isEdit){const i=D.medolce.findIndex(x=>x.id===id);D.medolce[i]=r;gasPost('update','medolce',r,id);}
+  else{D.medolce.unshift(r);gasPost('add','medolce',r);}
+  saveLocal();closeSh('md');renderMd();updCounts();toast(isEdit?'Aggiornata':'Archiviata');
+}
+async function delMd(){const id=document.getElementById('md_id').value;if(!id||!confirm('Eliminare?'))return;D.medolce=D.medolce.filter(x=>x.id!==id);saveLocal();gasPost('delete','medolce',null,id);closeSh('md');renderMd();updCounts();toast('Eliminata');}
+
+// ═══════════════════════════════════════════════════
+//  GASTRONOMIA
+// ═══════════════════════════════════════════════════
+function setGfView(v){
+  GF_VIEW=v;
+  ['regioni','mappa','lista','filtro'].forEach(x=>{
+    document.getElementById('gfVtb'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('on',v===x);
+  });
+  document.getElementById('regionGrid').classList.toggle('on',v==='regioni');
+  const gfMap=document.getElementById('gfMap');
+  gfMap.classList.toggle('on',v==='mappa');
+  document.getElementById('gfListaView').style.display=(v==='lista'||v==='filtro')?'block':'none';
+  if(v==='mappa')initGfMap();
+  if(v==='regioni'){renderRegionGrid();showAllRegions();}
+  if(v==='lista'||v==='filtro')renderGf();
+}
+
+function renderRegionGrid(){
+  const counts={};
+  REGIONI.forEach(r=>counts[r]=0);
+  D.gastronomia.forEach(r=>{if(r.regione)counts[r.regione]=(counts[r.regione]||0)+1;});
+  document.getElementById('regGrid').innerHTML=REGIONI.map(r=>{
+    const cnt=counts[r]||0;
+    const isFocus=FOCUS_REG.includes(r);
+    return `<button class="reg-btn${isFocus?' focus-reg':''}" onclick="showRegione('${r}')">
+      <div class="reg-name">${r}</div>
+      <div class="reg-count">${cnt} referenz${cnt===1?'a':'e'}</div>
+      ${cnt>0?`<div class="reg-badge${isFocus?' sage':''}">${cnt}</div>`:''}
+    </button>`;
+  }).join('');
+}
+
+function showAllRegions(){
+  document.getElementById('regGrid').style.display='grid';
+  document.getElementById('regList').style.display='none';
+  CUR_REG=null;
+}
+function backToRegions(){showAllRegions();}
+function showAllGf(){
+  FILT.gf='all';setGfView('lista');
+}
+
+function showRegione(reg){
+  CUR_REG=reg;
+  document.getElementById('regGrid').style.display='none';
+  document.getElementById('regList').style.display='block';
+  document.getElementById('regListTitle').textContent=reg;
+  const items=D.gastronomia.filter(r=>r.regione===reg);
+  const el=document.getElementById('regListContent');
+  if(!items.length){el.innerHTML=`<div class="empty"><div class="empty-t">Nessuna referenza per ${reg}</div><div class="empty-s">Aggiungi piatti, ristoranti, vini di questa regione.</div><button class="btn-empty" onclick="openAddGf()">+ Aggiungi</button></div>`;return;}
+  el.innerHTML=items.map(r=>renderGfCard(r)).join('');
+}
+
+function renderGfCard(r){
+  const tipo=r.tipo||'piatto';
+  const pills=[];
+  if(r.vino)pills.push(`<span class="gf-pill vino">🍷 ${esc(r.vino)}</span>`);
+  if(r.risorsa_tipo&&r.risorsa_titolo)pills.push(`<span class="gf-pill risorsa">${r.risorsa_tipo==='libro'?'📖':r.risorsa_tipo==='musica'?'🎵':'💭'} ${esc(r.risorsa_titolo)}</span>`);
+  return `<div class="gf-card" onclick="openDetGf('${r.id}')">
+    <div class="gf-card-top">
+      <span class="gf-type-badge ${tipo}">${GF_TYPE_LABELS[tipo]||tipo}</span>
+      <div class="gf-card-body">
+        <div class="gf-card-name">${esc(r.nome||'')}</div>
+        <div class="gf-card-reg">${esc(r.regione||'')}${r.citta?' · '+esc(r.citta):''}</div>
+        ${r.descrizione?`<div class="gf-card-desc">${esc(r.descrizione)}</div>`:''}
+      </div>
+    </div>
+    ${pills.length?`<div class="gf-card-foot">${pills.join('')}</div>`:''}
+    ${r.fotoUrl?`<div style="margin-top:.3rem"><img src="${r.fotoUrl}" alt="${esc(r.nome||'')}" style="width:100%;max-height:140px;object-fit:cover;border:1px solid var(--silver)" onerror="this.style.display='none'"></div>`:''}
+  </div>`;
+}
+
+function renderGf(){
+  const data=FILT.gf==='all'?D.gastronomia:D.gastronomia.filter(r=>r.tipo===FILT.gf);
+  const el=document.getElementById('listGf');
+  if(!data.length){el.innerHTML=`<div class="empty"><div class="empty-ico"><svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.7 1.3 3 3 3s3-1.3 3-3V2"/><line x1="6" y1="2" x2="6" y2="22"/><path d="M18 2c0 0-4 2-4 8s4 4 4 4v8"/></svg></div><div class="empty-t">Nessuna referenza ancora</div><div class="empty-s">Aggiungi piatti, ristoranti, vini e produttori.</div><button class="btn-empty" onclick="openAddGf()">+ Nuova referenza</button></div>`;return;}
+  el.innerHTML=data.map(r=>renderGfCard(r)).join('');
+}
+
+function initGfMap(){
+  const container=document.getElementById('gfMap');
+  if(GF_MAP){updateGfMarkers();return;}
+  GF_MAP=L.map(container,{zoomControl:true,attributionControl:false}).setView([42.5,13.2],6);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19}).addTo(GF_MAP);
+  updateGfMarkers();
+}
+function updateGfMarkers(){
+  if(!GF_MAP)return;
+  GF_MARKERS.forEach(m=>m.remove());GF_MARKERS=[];
+  const colori={piatto:'#2B5FAC',ristorante:'#8B3A2A',vino:'#6B3A8C',produttore:'#4A7C59',mercato:'#A05800'};
+  D.gastronomia.filter(r=>r.lat&&r.lng).forEach(r=>{
+    const col=colori[r.tipo]||'#555';
+    const ico=L.divIcon({html:`<div style="width:24px;height:24px;background:${col};border:2px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,.25)"><span style="display:block;transform:rotate(45deg);text-align:center;font-size:9px;line-height:20px;color:white;font-weight:700">${(r.tipo||'p').charAt(0).toUpperCase()}</span></div>`,className:'',iconSize:[24,24],iconAnchor:[12,24]});
+    const m=L.marker([r.lat,r.lng],{icon}).addTo(GF_MAP);
+    m.bindPopup(`<strong style="font-size:13px;font-family:serif">${r.nome}</strong><br><span style="font-size:11px;color:#666">${r.regione||''}${r.citta?' · '+r.citta:''}</span>${r.vino?`<br><span style="font-size:11px;color:#6B3A8C">🍷 ${r.vino}</span>`:''}`);
+    GF_MARKERS.push(m);
+  });
+}
+
+function openAddGf(){
+  document.getElementById('gf_id').value='';document.getElementById('gfShTtl').textContent='Nuova Referenza';
+  ['gf_nome','gf_citta','gf_desc','gf_ings','gf_proc','gf_vino','gf_cantina','gf_lat','gf_lng','gf_ris_autore','gf_ris_titolo','gf_ris_nota','gf_arte_autore','gf_arte_titolo','gf_arte_nota','gf_foto','gf_audio','gf_fonte'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('gf_tipo').value='piatto';document.getElementById('gf_reg').value=CUR_REG||'';
+  document.getElementById('gf_cat').value='';document.getElementById('gf_ris_tipo').value='';document.getElementById('gf_arte_tipo').value='';
+  document.getElementById('gf_delBtn').style.display='none';openSh('gf');
+}
+function openEditGf(id){
+  const r=D.gastronomia.find(x=>x.id===id);if(!r)return;
+  document.getElementById('gf_id').value=id;document.getElementById('gfShTtl').textContent='Modifica · '+r.nome;
+  document.getElementById('gf_nome').value=r.nome||'';document.getElementById('gf_tipo').value=r.tipo||'piatto';
+  document.getElementById('gf_reg').value=r.regione||'';document.getElementById('gf_citta').value=r.citta||'';
+  document.getElementById('gf_cat').value=r.cat||'';document.getElementById('gf_desc').value=r.descrizione||'';
+  document.getElementById('gf_ings').value=(r.ingredienti||[]).join('\n');document.getElementById('gf_proc').value=(r.procedimento||[]).join('\n');
+  document.getElementById('gf_vino').value=r.vino||'';document.getElementById('gf_cantina').value=r.cantina||'';
+  document.getElementById('gf_lat').value=r.lat||'';document.getElementById('gf_lng').value=r.lng||'';
+  document.getElementById('gf_ris_tipo').value=r.risorsa_tipo||'';document.getElementById('gf_ris_autore').value=r.risorsa_autore||'';
+  document.getElementById('gf_ris_titolo').value=r.risorsa_titolo||'';document.getElementById('gf_ris_nota').value=r.risorsa_nota||'';
+  document.getElementById('gf_arte_tipo').value=r.arte_tipo||'';document.getElementById('gf_arte_autore').value=r.arte_autore||'';
+  document.getElementById('gf_arte_titolo').value=r.arte_titolo||'';document.getElementById('gf_arte_nota').value=r.arte_nota||'';
+  document.getElementById('gf_fonte').value=r.fonte||'';
+  document.getElementById('gf_foto').value=r.fotoUrl||'';
+  document.getElementById('gf_audio').value=r.audioUrl||'';
+  document.getElementById('gf_delBtn').style.display='block';openSh('gf');
+}
+async function saveGf(){
+  if(ROLE==='reader'){toast('Accedi come editor — ⚙️ Impostazioni');return;}
+  const nome=document.getElementById('gf_nome').value.trim(),reg=document.getElementById('gf_reg').value;
+  if(!nome){toast('Nome obbligatorio');return;}
+  const existId=document.getElementById('gf_id').value,isEdit=!!existId,id=existId||genId();
+  const orig=isEdit?(D.gastronomia.find(x=>x.id===id)||{}):{};
+  const r={id,nome,tipo:document.getElementById('gf_tipo').value,regione:reg,citta:document.getElementById('gf_citta').value.trim(),cat:document.getElementById('gf_cat').value,descrizione:document.getElementById('gf_desc').value.trim(),ingredienti:document.getElementById('gf_ings').value.split('\n').filter(Boolean),procedimento:document.getElementById('gf_proc').value.split('\n').filter(Boolean),vino:document.getElementById('gf_vino').value.trim(),cantina:document.getElementById('gf_cantina').value.trim(),lat:parseFloat(document.getElementById('gf_lat').value)||null,lng:parseFloat(document.getElementById('gf_lng').value)||null,fotoUrl:document.getElementById('gf_foto').value.trim(),audioUrl:document.getElementById('gf_audio').value.trim(),risorsa_tipo:document.getElementById('gf_ris_tipo').value,risorsa_autore:document.getElementById('gf_ris_autore').value.trim(),risorsa_titolo:document.getElementById('gf_ris_titolo').value.trim(),risorsa_nota:document.getElementById('gf_ris_nota').value.trim(),arte_tipo:document.getElementById('gf_arte_tipo').value,arte_autore:document.getElementById('gf_arte_autore').value.trim(),arte_titolo:document.getElementById('gf_arte_titolo').value.trim(),arte_nota:document.getElementById('gf_arte_nota').value.trim(),fonte:document.getElementById('gf_fonte').value.trim(),dataCreazione:orig.dataCreazione||new Date().toISOString(),updatedAt:new Date().toISOString()};
+  if(isEdit){const i=D.gastronomia.findIndex(x=>x.id===id);D.gastronomia[i]=r;gasPost('update','gastronomia',r,id);}
+  else{D.gastronomia.unshift(r);gasPost('add','gastronomia',r);}
+  saveLocal();closeSh('gf');
+  if(GF_VIEW==='regioni'){renderRegionGrid();if(CUR_REG)showRegione(CUR_REG);}else renderGf();
+  updCounts();if(GF_MAP)updateGfMarkers();toast(isEdit?'Aggiornata':'Archiviata');
+}
+async function delGf(){const id=document.getElementById('gf_id').value;if(!id||!confirm('Eliminare?'))return;D.gastronomia=D.gastronomia.filter(x=>x.id!==id);saveLocal();gasPost('delete','gastronomia',null,id);closeSh('gf');if(GF_VIEW==='regioni'){renderRegionGrid();if(CUR_REG)showRegione(CUR_REG);}else renderGf();updCounts();toast('Eliminata');}
+
+function openDetGf(id){
+  const r=D.gastronomia.find(x=>x.id===id);if(!r)return;
+  document.getElementById('detLabel').textContent=GF_TYPE_LABELS[r.tipo]||r.tipo||'Referenza';
+  const stepsHtml=(r.procedimento||[]).map((s,i)=>`<div class="det-step"><span class="det-step-n">${i+1}</span><span class="det-step-t">${esc(s)}</span></div>`).join('');
+  const ingsHtml=(r.ingredienti||[]).map(i=>`<li class="det-ing-li"><span>${esc(i)}</span></li>`).join('');
+  document.getElementById('detBody').innerHTML=`
+    <div class="det-hero">
+      <div class="det-sub">${esc(r.regione||'')}${r.citta?' · '+esc(r.citta):''}</div>
+      <div class="det-ttl">${esc(r.nome||'')}</div>
+      ${r.descrizione?`<div class="det-desc-hero">${esc(r.descrizione)}</div>`:''}
+    </div>
+    <div class="det-body">
+      ${r.fotoUrl?`<img src="${r.fotoUrl}" alt="${esc(r.nome||'')}" style="width:100%;max-height:200px;object-fit:cover;border-bottom:1px solid var(--silver);margin-bottom:.3rem" onerror="this.style.display='none'">`:''}
+    ${r.audioUrl?`<div class="det-music" style="margin:.3rem 1.2rem"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><a href="${r.audioUrl}" target="_blank" style="color:var(--navy2);text-decoration:none;font-style:italic">Ascolta / Guarda →</a></div>`:''}
+    ${r.vino||r.cantina?`<div class="det-lbl">Vino & Cantina</div><div class="det-note-b">${r.vino?`🍷 ${esc(r.vino)}`:''} ${r.cantina?`<br><span style="font-size:.8rem;color:var(--steel)">↗ ${esc(r.cantina)}</span>`:''}</div>`:''}
+      ${ingsHtml?`<div class="det-lbl">Ingredienti</div><ul>${ingsHtml}</ul>`:''}
+      ${stepsHtml?`<div class="det-lbl">Procedimento</div>${stepsHtml}`:''}
+      ${r.risorsa_tipo&&r.risorsa_titolo?`<div class="det-lbl">Risorsa consigliata</div><div class="det-risorsa"><div class="det-risorsa-tipo">${r.risorsa_tipo==='libro'?'📖 Libro':r.risorsa_tipo==='musica'?'🎵 Musica':r.risorsa_tipo==='film'?'🎬 Film':'💭 Riflessione'}${r.risorsa_autore?' · '+esc(r.risorsa_autore):''}</div><div class="det-risorsa-titolo">${esc(r.risorsa_titolo)}</div>${r.risorsa_nota?`<div class="det-risorsa-nota">${esc(r.risorsa_nota)}</div>`:''}</div>`:''}
+      ${r.fonte?`<div style="font-size:.58rem;color:var(--mist);margin-top:.5rem">Fonte: ${esc(r.fonte)}</div>`:''}
+      <div class="det-acts"><button class="det-btn" onclick="closeSh('det');openEditGf('${r.id}')">✏ Modifica</button><button class="det-btn danger" onclick="delGfFromDet('${r.id}')">🗑 Elimina</button></div>
+    </div>`;
+  openSh('det');
+}
+async function delGfFromDet(id){if(!confirm('Eliminare?'))return;D.gastronomia=D.gastronomia.filter(x=>x.id!==id);saveLocal();gasPost('delete','gastronomia',null,id);closeSh('det');if(GF_VIEW==='regioni'){renderRegionGrid();if(CUR_REG)showRegione(CUR_REG);}else renderGf();updCounts();toast('Eliminata');}
+
+// ═══════════════════════════════════════════════════
+//  RICETTARIO
+// ═══════════════════════════════════════════════════
+function renderRc(){
+  const data=FILT.rc==='all'?D.ricettario:D.ricettario.filter(r=>(r.category||r.categoria)===FILT.rc);
+  const el=document.getElementById('listRc');
+  if(!data.length){el.innerHTML=`<div class="empty"><div class="empty-ico"><svg viewBox="0 0 24 24"><path d="M2 4h9v16H2z"/><path d="M13 4h9v16h-9z"/></svg></div><div class="empty-t">Nessuna ricetta ancora</div><div class="empty-s">Aggiungi ricette o importa da Impostazioni.</div><button class="btn-empty" onclick="openAddRc()">+ Nuova ricetta</button></div>`;return;}
+  el.innerHTML=data.map(r=>{
+    const cat=r.category||r.categoria||'',ico=r.emoji||RC_ICO[cat]||'🍽️';
+    const meta=[];if(r.difficulty||r.difficolta)meta.push(r.difficulty||r.difficolta);const tot=(r.prep||0)+(r.cook||0);if(tot)meta.push(tot+'min');
+    return `<div class="rcard" onclick="openDetRc('${r.id}')">
+      <div class="rcard-ico" style="font-size:19px">${ico}</div>
+      <div class="rcard-body"><div class="rcard-cat">${esc(cat)}${meta.length?' · '+meta.join(' · '):''}</div><div class="rcard-name">${esc(r.name||r.nome||'')}</div>${r.notes?`<div class="rcard-desc">${esc(r.notes)}</div>`:''}</div>
+      <div class="rcard-arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div></div>`;
+  }).join('');
+}
+function openAddRc(){
+  document.getElementById('rc_id').value='';document.getElementById('rcShTtl').textContent='Nuova Ricetta';
+  ['rc_nome','rc_ings','rc_proc','rc_note','rc_tags','rc_src'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rc_cat').value='🍝 Primi';document.getElementById('rc_dif').value='Media';
+  document.getElementById('rc_prep').value=30;document.getElementById('rc_cook').value=30;document.getElementById('rc_srv').value=4;
+  document.getElementById('rc_delBtn').style.display='none';openSh('rc');
+}
+function openEditRc(id){
+  const r=D.ricettario.find(x=>x.id===id);if(!r)return;
+  document.getElementById('rc_id').value=id;document.getElementById('rcShTtl').textContent='Modifica · '+(r.name||r.nome||'');
+  document.getElementById('rc_nome').value=r.name||r.nome||'';document.getElementById('rc_cat').value=r.category||r.categoria||'🍝 Primi';
+  document.getElementById('rc_dif').value=r.difficulty||'Media';document.getElementById('rc_prep').value=r.prep||0;
+  document.getElementById('rc_cook').value=r.cook||0;document.getElementById('rc_srv').value=r.servings||4;
+  document.getElementById('rc_ings').value=(r.ingredients||[]).join('\n');
+  document.getElementById('rc_proc').value=(r.steps||[]).map(s=>typeof s==='object'?s.text:s).join('\n');
+  document.getElementById('rc_note').value=r.notes||'';document.getElementById('rc_tags').value=(r.tags||[]).join(', ');
+  document.getElementById('rc_src').value=r.sourceUrl||'';document.getElementById('rc_delBtn').style.display='block';openSh('rc');
+}
+async function saveRc(){
+  if(ROLE==='reader'){toast('Accedi come editor — ⚙️ Impostazioni');return;}
+  const nome=document.getElementById('rc_nome').value.trim();if(!nome){toast('Nome obbligatorio');return;}
+  const cat=document.getElementById('rc_cat').value,existId=document.getElementById('rc_id').value,isEdit=!!existId,id=existId||genId();
+  const orig=isEdit?(D.ricettario.find(x=>x.id===id)||{}):{};
+  const r={id,name:nome,category:cat,emoji:RC_ICO[cat]||'🍽️',difficulty:document.getElementById('rc_dif').value,prep:parseInt(document.getElementById('rc_prep').value)||0,cook:parseInt(document.getElementById('rc_cook').value)||0,servings:parseInt(document.getElementById('rc_srv').value)||4,ingredients:document.getElementById('rc_ings').value.split('\n').filter(Boolean),steps:document.getElementById('rc_proc').value.split('\n').filter(Boolean).map(t=>({text:t,ingredients:[]})),notes:document.getElementById('rc_note').value.trim(),tags:document.getElementById('rc_tags').value.split(',').map(s=>s.trim()).filter(Boolean),sourceUrl:document.getElementById('rc_src').value.trim(),createdAt:orig.createdAt||Date.now()};
+  if(isEdit){const i=D.ricettario.findIndex(x=>x.id===id);D.ricettario[i]=r;gasPost('update','ricettario',r,id);}
+  else{D.ricettario.unshift(r);gasPost('add','ricettario',r);}
+  saveLocal();closeSh('rc');renderRc();updCounts();toast(isEdit?'Aggiornata':'Archiviata');
+}
+async function delRc(){const id=document.getElementById('rc_id').value;if(!id||!confirm('Eliminare?'))return;D.ricettario=D.ricettario.filter(x=>x.id!==id);saveLocal();gasPost('delete','ricettario',null,id);closeSh('rc');renderRc();updCounts();toast('Eliminata');}
+function openDetRc(id){
+  const r=D.ricettario.find(x=>x.id===id);if(!r)return;
+  const cat=r.category||r.categoria||'';
+  const ings=(r.ingredients||[]).map(i=>`<li class="det-ing-li"><span>${esc(i)}</span></li>`).join('');
+  const steps=(r.steps||[]).map((s,i)=>`<div class="det-step"><span class="det-step-n">${i+1}</span><span class="det-step-t">${esc(typeof s==='object'?s.text:s)}</span></div>`).join('');
+  const meta=[];if(r.difficulty)meta.push(r.difficulty);const tot=(r.prep||0)+(r.cook||0);if(tot)meta.push('⏱ '+tot+'min');if(r.servings)meta.push('👥 '+r.servings+' porz.');
+  document.getElementById('detLabel').textContent=cat;
+  document.getElementById('detBody').innerHTML=`
+    <div class="det-hero">
+      <div class="det-sub">${esc(cat)} ${meta.length?'· '+meta.join(' · '):''}</div>
+      <div class="det-ttl">${esc(r.name||r.nome||'')}</div>
+      ${r.notes?`<div class="det-desc-hero">${esc(r.notes)}</div>`:''}
+    </div>
+    <div class="det-body">
+      ${ings?`<div class="det-lbl">Ingredienti</div><ul>${ings}</ul>`:''}
+      ${steps?`<div class="det-lbl">Procedimento</div>${steps}`:''}
+      ${(r.tags||[]).length?`<div class="det-tags">${r.tags.map(t=>`<span class="det-tag">${t}</span>`).join('')}</div>`:''}
+      ${r.sourceUrl?`<a href="${r.sourceUrl}" target="_blank" style="font-size:.7rem;color:var(--steel);border-bottom:1px solid">Fonte →</a>`:''}
+      <div class="det-acts"><button class="det-btn" onclick="closeSh('det');openEditRc('${r.id}')">✏ Modifica</button><button class="det-btn danger" onclick="delDetRc('${r.id}')">🗑 Elimina</button></div>
+    </div>`;
+  openSh('det');
+}
+async function delDetRc(id){if(!confirm('Eliminare?'))return;D.ricettario=D.ricettario.filter(x=>x.id!==id);saveLocal();gasPost('delete','ricettario',null,id);closeSh('det');renderRc();updCounts();toast('Eliminata');}
+
+// ═══════════════════════════════════════════════════
+//  DETAIL M'E DOLCE
+// ═══════════════════════════════════════════════════
+function openDet(id,sec){
+  if(sec==='md'){openDetMd(id);}
+  else if(sec==='gf'){openDetGf(id);}
+  else{openDetRc(id);}
+}
+function openDetMd(id){
+  const r=D.medolce.find(x=>x.id===id);if(!r)return;
+  const sub=(r.categoria&&MD_SUBS[r.categoria]&&r.sottocategoria)?MD_SUBS[r.categoria][r.sottocategoria]:'';
+  const ings=(r.ingredienti||[]).map(i=>typeof i==='string'?`<li class="det-ing-li"><span>${esc(i)}</span></li>`:`<li class="det-ing-li"><span>${esc(i.nome||String(i))}</span><span class="det-ing-qty">${i.peso?i.peso+'g':''}${i.pct?' ('+i.pct+'%)':''}</span></li>`).join('');
+  const steps=(r.procedimento||[]).map((s,i)=>`<div class="det-step"><span class="det-step-n">${i+1}</span><span class="det-step-t">${esc(s)}</span></div>`).join('');
+  document.getElementById('detLabel').textContent="M'è dolce";
+  document.getElementById('detBody').innerHTML=`
+    <div class="det-hero">
+      <div class="det-sub">${esc(r.categoria||'')}${sub?' · '+esc(sub):''}</div>
+      <div class="det-ttl">${esc(r.nome||'')}</div>
+      ${r.descrizione?`<div class="det-desc-hero">${esc(r.descrizione)}</div>`:''}
+      ${r.citazione?`<div class="det-cit">${esc(r.citazione)}</div>`:''}
+    </div>
+    ${r.musica?`<div class="det-music"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>${esc(r.musica)}</div>`:''}
+    ${r.audioUrl?`<div style="display:flex;align-items:center;gap:.8rem;padding:.35rem 1.2rem .45rem">${makeQR(r.audioUrl)}<div style="font-size:.66rem;color:var(--fog);font-family:var(--font-b);font-style:italic;line-height:1.5">Inquadra per ascoltare</div></div>`:''}
+    <div class="det-body">
+      ${r.abbinamento?`<div class="det-lbl">Abbinamento</div><div class="det-note-b">${esc(r.abbinamento)}</div>`:''}
+      ${ings?`<div class="det-lbl">Ingredienti</div><ul>${ings}</ul>`:''}
+      ${steps?`<div class="det-lbl">Procedimento</div>${steps}`:''}
+      ${r.note?`<div class="det-lbl">Note tecniche</div><div class="det-note-b">${esc(r.note)}</div>`:''}
+      ${r.codice||r.fonte?`<div style="font-size:.56rem;color:var(--mist);margin-top:.4rem">${[r.codice?'Cod: '+r.codice:'',r.fonte?'Fonte: '+r.fonte:''].filter(Boolean).join(' · ')}</div>`:''}
+      <div class="det-acts"><button class="det-btn" onclick="closeSh('det');openEditMd('${r.id}')">✏ Modifica</button><button class="det-btn danger" onclick="delDetMd('${r.id}')">🗑 Elimina</button></div>
+      ${r.dataCreazione?`<div style="font-size:.55rem;color:var(--mist);margin-top:.7rem;text-align:center">${new Date(r.dataCreazione).toLocaleDateString('it-IT')}</div>`:''}
+    </div>`;
+  openSh('det');
+}
+async function delDetMd(id){if(!confirm('Eliminare?'))return;D.medolce=D.medolce.filter(x=>x.id!==id);saveLocal();gasPost('delete','medolce',null,id);closeSh('det');renderMd();updCounts();toast('Eliminata');}
+
+// ═══════════════════════════════════════════════════
+//  SEARCH
+// ═══════════════════════════════════════════════════
+let _srchOpen=false;
+function toggleSearch(){
+  _srchOpen=!_srchOpen;
+  document.getElementById('srchBar').classList.toggle('open',_srchOpen);
+  const btn=document.getElementById('srchBtn');
+  btn.classList.toggle('on',_srchOpen);
+  btn.setAttribute('aria-expanded',_srchOpen);
+  if(_srchOpen)document.getElementById('srchIn').focus();else clearSearch();
+}
+
+// ETR — modalità Lettura Semplificata (accessibilità cognitiva)
+const ETR_KEY='atelier_etr';
+function toggleEtr(){
+  const on=!document.body.classList.contains('etr');
+  document.body.classList.toggle('etr',on);
+  localStorage.setItem(ETR_KEY,on?'1':'0');
+  const b=document.getElementById('etrBtn');
+  b.classList.toggle('on',on);
+  b.setAttribute('aria-pressed',on);
+  toast(on?'Lettura semplificata attiva':'Lettura normale');
+}
+function initEtr(){
+  if(localStorage.getItem(ETR_KEY)==='1'){
+    document.body.classList.add('etr');
+    const b=document.getElementById('etrBtn');
+    if(b){b.classList.add('on');b.setAttribute('aria-pressed','true');}
+  }
+}
+
+// PWA — registrazione service worker
+function registerSW(){
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',()=>{
+      navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW:',e));
+    });
+  }
+}
+function clearSearch(){document.getElementById('srchIn').value='';document.getElementById('srchRes').innerHTML='';}
+function doSearch(){
+  const q=document.getElementById('srchIn').value.toLowerCase().trim();
+  const res=document.getElementById('srchRes');
+  if(!q){res.innerHTML='';return;}
+  const matches=[];
+  const haystack=r=>[
+    r.nome,r.name,r.descrizione,r.notes,r.note,r.regione,r.citta,r.cantina,r.vino,
+    r.citazione,r.abbinamento,r.fonte,r.categoria,r.category,
+    ...(Array.isArray(r.tags)?r.tags:[]),
+    ...(Array.isArray(r.ingredients)?r.ingredients:[]),
+    ...(Array.isArray(r.ingredienti)?r.ingredienti.map(i=>typeof i==='object'?i.nome:i):[])
+  ].filter(Boolean).join(' ').toLowerCase();
+  [['md','medolce'],['gf','gastronomia'],['rc','ricettario']].forEach(([sec,key])=>{
+    D[key].forEach(r=>{if(haystack(r).includes(q))matches.push({r,sec});});
+  });
+  if(!matches.length){res.innerHTML=`<div class="srch-item" style="cursor:default"><span class="srch-sec">Nessun risultato</span></div>`;return;}
+  const icoSvg={
+    md:`<svg viewBox="0 0 24 24"><path d="M12 3c-2 0-5 2-5 6s2 8 5 10c3-2 5-6 5-10s-3-6-5-6z"/><path d="M12 3v16M7 9h10"/></svg>`,
+    gf:`<svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.7 1.3 3 3 3s3-1.3 3-3V2"/><line x1="6" y1="2" x2="6" y2="22"/></svg>`,
+    rc:`<svg viewBox="0 0 24 24"><path d="M2 4h9v16H2z"/><path d="M13 4h9v16h-9z"/></svg>`
+  };
+  res.innerHTML=matches.slice(0,10).map(({r,sec})=>`
+    <div class="srch-item" onclick="toggleSearch();setTimeout(()=>{goView('${sec}');${sec==='gf'?`openDetGf('${r.id}')`:sec==='rc'?`openDetRc('${r.id}')`:sec==='md'?`openDetMd('${r.id}')`:''}},320)">
+      <div class="srch-ico">${icoSvg[sec]||''}</div>
+      <div><div class="srch-name">${esc(r.nome||r.name||'')}</div><div class="srch-sec">${SEC_LABELS[sec]}${r.regione?' · '+r.regione:''}</div></div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════════
+async function saveGasUrl(){
+  GAS_URL=document.getElementById('gasUrlIn').value.trim();
+  localStorage.setItem(GAS_KEY,GAS_URL);
+  const dot=document.getElementById('gasDot'),stat=document.getElementById('gasStat');
+  if(!GAS_URL){dot.className='sdot';stat.textContent='Non configurato';return;}
+  stat.textContent='Test in corso...';dot.className='sdot';setSyncState('loading');
+  try{
+    const r=await fetch(GAS_URL,{method:'GET',redirect:'follow'});
+    const j=await r.json();
+    if(j.ok){dot.className='sdot ok';stat.textContent='Connesso · Google Sheets attivo ✓';setSyncState('ok');toast('Backend connesso ✓');}
+    else{dot.className='sdot err';stat.textContent='Errore: '+j.error;setSyncState('err');}
+  }catch(e){dot.className='sdot err';stat.textContent='Errore connessione';setSyncState('err');}
+}
+function initGasStatus(){
+  if(GAS_URL){document.getElementById('gasUrlIn').value=GAS_URL;document.getElementById('gasDot').className='sdot ok';document.getElementById('gasStat').textContent='URL configurato';}
+}
+async function migrateOld(){
+  try{
+    const old=JSON.parse(localStorage.getItem(OLD_KEY)||'[]');
+    if(!old.length){toast('Nessuna ricetta in rfam_v3');return;}
+    const existing=new Set(D.ricettario.map(r=>r.id));
+    const toAdd=old.filter(r=>!existing.has(r.id));
+    if(!toAdd.length){toast('Già importate');return;}
+    D.ricettario=[...D.ricettario,...toAdd];saveLocal();
+    renderRc();updCounts();toast('✓ Importate '+toAdd.length+' ricette');closeSh('set');goView('rc');
+  }catch(e){toast('Errore: '+e.message);}
+}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='atelier-sinestetico-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+function doImport(evt){
+  const file=evt.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      ['medolce','gastronomia','ricettario','notizie'].forEach(k=>{if(Array.isArray(data[k]))D[k]=data[k];});
+      saveLocal();renderHome();updCounts();toast('Backup importato');
+    }catch{toast('File JSON non valido');}
+  };
+  reader.readAsText(file);evt.target.value='';
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTO-NOTIZIA
+// ═══════════════════════════════════════════════════
+function autoNotizia(rec, sec) {
+  const labels = { md:"M'è dolce", gf:'Gastronomia di Frontiera', rc:'Ricettario' };
+  const tipoLabel = { piatto:'Piatto', ristorante:'Ristorante', vino:'Vino', produttore:'Produttore', mercato:'Mercato' };
+  let titolo = rec.nome || rec.name || '';
+  let testo = '';
+  if (sec === 'md') {
+    const sub = (rec.categoria && MD_SUBS[rec.categoria] && rec.sottocategoria) ? ' · ' + MD_SUBS[rec.categoria][rec.sottocategoria] : '';
+    testo = `Nuova ricetta M'è dolce${sub}${rec.descrizione ? ' — ' + rec.descrizione : ''}`;
+  } else if (sec === 'gf') {
+    const tipo = tipoLabel[rec.tipo] || 'Referenza';
+    const luogo = [rec.regione, rec.citta].filter(Boolean).join(' · ');
+    testo = `${tipo}${luogo ? ' · ' + luogo : ''}${rec.vino ? ' · Vino: ' + rec.vino : ''}${rec.descrizione ? ' — ' + rec.descrizione : ''}`;
+  } else if (sec === 'rc') {
+    const cat = rec.category || rec.categoria || '';
+    const tot = (rec.prep || 0) + (rec.cook || 0);
+    testo = `${cat}${tot ? ' · ' + tot + ' min' : ''}${rec.difficulty ? ' · ' + rec.difficulty : ''}`;
+  }
+  const notizia = {
+    id: 'AUTO_' + rec.id,
+    titolo,
+    categoria: labels[sec] || 'Aggiornamento',
+    fonte: sec === 'gf' ? (rec.cantina || '') : 'Archivio Atelier Sinestetico',
+    testo,
+    url: rec.audioUrl || rec.fotoUrl || '',
+    data: new Date().toISOString()
+  };
+  // Rimuovi eventuale notizia precedente dello stesso record
+  D.notizie = D.notizie.filter(n => n.id !== notizia.id);
+  D.notizie.unshift(notizia);
+  saveLocal();
+  gasPost('add', 'notizie', notizia);
+  if (document.getElementById('vHome').classList.contains('on')) renderNews();
+  updCounts();
+}
+
+// ═══════════════════════════════════════════════════
+//  SHEET UTILS
+// ═══════════════════════════════════════════════════
+function openSh(id){document.getElementById(id+'Ov').style.display='block';requestAnimationFrame(()=>document.getElementById(id+'Sh').classList.add('op'));}
+function closeSh(id){document.getElementById(id+'Sh').classList.remove('op');setTimeout(()=>document.getElementById(id+'Ov').style.display='none',360);}
+
+// ═══════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════
+let _tt;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('on'),2800);}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')['md','gf','rc','news','det','set'].forEach(id=>closeSh(id));});
+
+
+
+// ═══════════════════════════════════════════════════
+//  AI WIZARD — Import & classify recipes
+// ═══════════════════════════════════════════════════
+function openAiRc(){
+  document.getElementById('aiDestSec').value='rc';
+  document.getElementById('aiShTtl').textContent="✦ Importa nel Ricettario con AI";
+  _resetAiSheet();
+  openSh('ai');
+}
+function openAiMd(){
+  document.getElementById('aiDestSec').value='md';
+  document.getElementById('aiShTtl').textContent="✦ Importa in M'è dolce con AI";
+  _resetAiSheet();
+  openSh('ai');
+}
+function _resetAiSheet(){
+  document.getElementById('aiRawText').value='';
+  document.getElementById('aiSrcUrl').value='';
+  document.getElementById('aiNote').value='';
+  document.getElementById('aiStatusBox').style.display='none';
+  document.getElementById('aiPreviewBox').innerHTML='';
+  _aiPendingRecord = null;
+  _aiPendingSec = null;
+}
+
+function _buildSysPrompt(sec){
+  if(sec==='md'){
+    return `Sei il maestro archivista dell'Atelier Sinestetico di Recanati, cioccolateria sinestetica ispirata a Giacomo Leopardi.
+Analizza il testo grezzo fornito e restituisci SOLO un oggetto JSON valido senza markdown né testo aggiuntivo:
+{"nome":"Nome evocativo (può essere leopardiano)","codice":"XXX-XXX-001","categoria":"A|B|C","sottocategoria":"A1-A5|B1-B4|C1-C6","descrizione":"Descrizione sensoriale max 120 caratteri","ingredienti":[{"nome":"...","peso":0,"pct":0,"unita":"g"}],"procedimento":["fase 1","fase 2"],"note":"Note tecniche professionali con temperatura/shelf life","abbinamento":"Vino · Tè","musica":"Brano — Compositore/Artista","citazione":"«...» — G. Leopardi, Opera (anno)","fonte":"Fonte originale"}
+Categorie: A=cioccolatini/praline/tavolette (A1:guscio,A2:ripieni,A3:tartufi,A4:monorigine,A5:inclusi) B=micro pasticceria (B1:monoporzioni,B2:petits fours,B3:biscotteria,B4:caramelle) C=elementi base (C1:ganache,C2:pralinati,C3:gelatine,C4:aromi,C5:innovativi,C6:biscotti base)
+Bilancia le percentuali degli ingredienti a 100%. Scegli citazione leopardiana coerente con il sapore/atmosfera del prodotto.`;
+  }
+  return `Sei un assistente gastronomico dell'Atelier Sinestetico. Analizza il testo e restituisci SOLO JSON valido senza markdown:
+{"name":"Nome ricetta","category":"🍝 Primi|🥩 Secondi|🫒 Antipasti|🍫 Dolci|🍞 Pane & Lievitati|🥗 Contorni|🍹 Bevande","difficulty":"Facile|Media|Difficile","prep":0,"cook":0,"servings":4,"ingredients":["ingrediente 1","ingrediente 2"],"steps":[{"text":"passo 1","ingredients":[]},{"text":"passo 2","ingredients":[]}],"notes":"Note e consigli","tags":["tag1","tag2"],"sourceUrl":""}
+Regole: prep e cook in minuti interi, servings numero intero, ingredients lista di stringhe (es. '300g farina 00'), steps array di oggetti con testo del passo, tags parole chiave italiane pertinenti.`;
+}
+
+async function runAI(){
+  if(ROLE==='reader'){toast('Accedi come editor — Impostazioni ⚙️');return;}
+  const raw  = document.getElementById('aiRawText').value.trim();
+  const src  = document.getElementById('aiSrcUrl').value.trim();
+  const nota = document.getElementById('aiNote').value.trim();
+  const sec  = document.getElementById('aiDestSec').value;
+
+  if(!raw){ toast("Incolla prima il testo della ricetta"); return; }
+
+  const statusBox = document.getElementById('aiStatusBox');
+  const prevBox   = document.getElementById('aiPreviewBox');
+  statusBox.style.display='block';
+  statusBox.className='ai-status loading';
+  statusBox.innerHTML='<div class="spin" style="width:14px;height:14px;flex-shrink:0"></div><span>Analisi AI in corso...</span>';
+  prevBox.innerHTML='';
+  document.getElementById('aiRunBtn').disabled=true;
+
+  if(!GAS_URL){
+    statusBox.className='ai-status err';
+    statusBox.innerHTML='<span>⚠</span><span>Configura il backend Google Apps Script nelle Impostazioni (la chiave API Claude sta sul server, non nel browser).</span>';
+    document.getElementById('aiRunBtn').disabled=false;
+    return;
+  }
+
+  const userMsg = raw+(src?'\n\nFonte URL: '+src:'')+(nota?'\n\nNota: '+nota:'');
+
+  try{
+    // Chiamata via proxy GAS: la chiave Claude è in PropertiesService, mai esposta
+    const j = await gasPost('aiProcess',null,null,null,{
+      sec,
+      systemPrompt: _buildSysPrompt(sec),
+      userMessage: userMsg
+    });
+    if(!j.ok) throw new Error(j.error||'Errore AI proxy');
+
+    const txt = String(j.text||'').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(txt);
+    if(src && !parsed.sourceUrl) parsed.sourceUrl = src;
+
+    statusBox.className='ai-status ok';
+    statusBox.innerHTML='<span>✓</span><span>Elaborazione completata — verifica e archivia</span>';
+    _showAiPreview(parsed, sec);
+  }catch(e){
+    statusBox.className='ai-status err';
+    statusBox.innerHTML='<span>⚠</span><span>Errore: '+e.message+'</span>';
+  }
+  document.getElementById('aiRunBtn').disabled=false;
+}
+
+let _aiPendingRecord = null;
+let _aiPendingSec = null;
+function _showAiPreview(r, sec){
+  const prevBox = document.getElementById('aiPreviewBox');
+  _aiPendingRecord = r;
+  _aiPendingSec = sec;
+  const nome = r.nome || r.name || '—';
+  const cat  = r.category || r.categoria || r.cat || '';
+  const meta = [];
+  if(r.difficulty||r.difficolta) meta.push(r.difficulty||r.difficolta);
+  if(r.prep||r.cook) meta.push(((r.prep||0)+(r.cook||0))+'min');
+  if(r.servings) meta.push(r.servings+' porz.');
+  if(r.categoria) meta.push('Cat. '+r.categoria+(r.sottocategoria?' · '+r.sottocategoria:''));
+
+  const srcChip = (r.sourceUrl||r.fonte) ?
+    `<span class="src-chip">↗ ${esc((r.sourceUrl||r.fonte).slice(0,50)+(((r.sourceUrl||r.fonte).length>50)?'...':''))}</span>` : '';
+
+  prevBox.innerHTML=`
+    <div class="ai-prev">
+      <div class="ai-prev-ttl">${esc(nome)}</div>
+      <div class="ai-prev-meta">${esc(cat)}${meta.length?' · '+meta.join(' · '):''}${r.note||r.notes?' · '+esc((r.note||r.notes).slice(0,60))+'...':''}</div>
+      ${r.citazione?`<div style="font-family:var(--font-b);font-style:italic;font-size:.8rem;color:var(--fog);border-left:2px solid var(--gold);padding-left:.6rem;margin:.4rem 0">${esc(r.citazione)}</div>`:''}
+      ${srcChip}
+      <div style="margin-top:.3rem">
+        <span class="src-chip">${(r.ingredients||r.ingredienti||[]).length} ingredienti</span>
+        <span class="src-chip">${(r.steps||r.procedimento||[]).length} fasi</span>
+        ${(r.tags||[]).map(t=>`<span class="src-chip">${esc(t)}</span>`).join('')}
+      </div>
+      <button class="btn-save" style="margin-top:.7rem;padding:.65rem" onclick="_archiviaAI()">💾 Archivia questa ricetta</button>
+    </div>`;
+}
+
+function _archiviaAI(){
+  if(!_aiPendingRecord){toast('Nessuna anteprima da archiviare');return;}
+  const r = JSON.parse(JSON.stringify(_aiPendingRecord));
+  const sec = _aiPendingSec;
+  r.id = genId();
+  if(sec==='md'){
+    r.dataCreazione = new Date().toISOString();
+    D.medolce.unshift(r);
+    saveLocal(); gasPost('add','medolce',r);
+    renderMd(); updCounts();
+    autoNotizia(r,'md');
+  } else {
+    r.createdAt = Date.now();
+    if(!r.emoji) r.emoji = RC_ICO[r.category]||'🍽️';
+    // normalize steps
+    if(Array.isArray(r.steps) && r.steps.length && typeof r.steps[0]==='string'){
+      r.steps = r.steps.map(t=>({text:t,ingredients:[]}));
+    }
+    D.ricettario.unshift(r);
+    saveLocal(); gasPost('add','ricettario',r);
+    renderRc(); updCounts();
+    autoNotizia(r,'rc');
+  }
+  closeSh('ai');
+  toast('✓ Ricetta archiviata: '+( r.nome||r.name));
+  _aiPendingRecord = null;
+  _aiPendingSec = null;
+}
+
+// ── URL / Source direct import ──
+function openSrcImport(){
+  document.getElementById('srcUrl').value='';
+  document.getElementById('srcText').value='';
+  document.getElementById('srcStatusBox').style.display='none';
+  document.getElementById('srcPreviewBox').innerHTML='';
+
+  openSh('src');
+}
+
+async function runSrcImport(){
+  const url  = document.getElementById('srcUrl').value.trim();
+  const txt  = document.getElementById('srcText').value.trim();
+  const sec  = document.getElementById('srcDestSec').value;
+
+  if(!url && !txt){ toast("Inserisci un URL o il testo della ricetta"); return; }
+
+  // Pre-fill the AI wizard with the source data and run
+  document.getElementById('aiDestSec').value = sec;
+  document.getElementById('aiSrcUrl').value  = url;
+  document.getElementById('aiRawText').value = txt || ('Ricetta da: '+url+'\n\nEstrai e struttura questa ricetta.');
+  closeSh('src');
+  openSh('ai');
+  // Auto-run after a tick
+  setTimeout(runAI, 400);
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTH — RUOLI: admin / editor / reader
+// ═══════════════════════════════════════════════════
+const AUTH_KEY='atelier_auth_v1';
+const ADMIN_EMAIL_AUTH='s.straccini@gmail.com';
+let ROLE='reader';
+let AUTH_USER=null;
+
+function loadAuth(){try{const a=localStorage.getItem(AUTH_KEY);if(a)AUTH_USER=JSON.parse(a);}catch(e){}}
+function saveAuth(u){AUTH_USER=u;localStorage.setItem(AUTH_KEY,JSON.stringify(u));}
+function clearAuth(){AUTH_USER=null;localStorage.removeItem(AUTH_KEY);}
+
+async function verifyEmail(email){
+  if(!GAS_URL)return null;
+  try{
+    const r=await fetch(GAS_URL+'?action=verifica&email='+encodeURIComponent(email),{redirect:'follow'});
+    const j=await r.json();
+    return j.ok?j.utente:null;
+  }catch(e){return null;}
+}
+
+async function doLogin(){
+  const email=document.getElementById('authEmail').value.trim().toLowerCase();
+  const err=document.getElementById('authErr');
+  if(!email||!email.includes('@')){err.textContent="Inserisci un'email valida";return;}
+  err.textContent='Verifica in corso...';
+  if(email===ADMIN_EMAIL_AUTH.toLowerCase()){
+    const u={ruolo:'admin',nome:'Silvano Straccini',email};
+    saveAuth(u);applyRole(u);hideAuthScreen();return;
+  }
+  const utente=await verifyEmail(email);
+  if(utente){saveAuth(utente);applyRole(utente);hideAuthScreen();}
+  else{err.textContent='Email non autorizzata come editor.';}
+}
+
+function continueAsReader(){
+  clearAuth();
+  applyRole({ruolo:'reader',nome:'Lettore',email:''});
+  hideAuthScreen();
+}
+
+function hideAuthScreen(){
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+
+function showAuthScreen(){
+  document.getElementById('authScreen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+function applyRole(user){
+  ROLE=user.ruolo||'reader';
+  AUTH_USER=user;
+  const chip=document.getElementById('roleChip');
+  const chipWrap=document.getElementById('roleChipWrap');
+  if(ROLE!=='reader'){
+    chip.className='role-chip '+ROLE;
+    chip.textContent=ROLE==='admin'?'Admin':'Editor';
+    chipWrap.style.display='block';
+  } else {chipWrap.style.display='none';}
+  const canEdit=(ROLE==='admin'||ROLE==='editor');
+  // Buttons always visible — readers blocked at save time with toast
+  const lb=document.getElementById('logoutBtn');
+  if(lb)lb.style.display=canEdit?'block':'none';
+  const lbSet=document.getElementById('loginFromSet');
+  if(lbSet)lbSet.style.display=(!canEdit)?'block':'none';
+  if(ROLE==='admin'){
+    const sp=document.getElementById('setUserSep');
+    const pp=document.getElementById('setUserPanel');
+    if(sp)sp.style.display='block';
+    if(pp)pp.style.display='block';
+    loadEditorList();
+  }
+}
+
+async function loadEditorList(){
+  if(!GAS_URL||ROLE!=='admin')return;
+  const el=document.getElementById('usrList');
+  if(!el)return;
+  el.innerHTML='<div style="font-size:.7rem;color:var(--fog)">Caricamento...</div>';
+  try{
+    const r=await fetch(GAS_URL+'?action=getUtenti',{redirect:'follow'});
+    const j=await r.json();
+    const utenti=(j.data||[]).filter(u=>u.attivo!=='false'&&u.attivo!==false);
+    if(!utenti.length){el.innerHTML='<div style="font-size:.72rem;color:var(--fog)">Nessun editor ancora.</div>';return;}
+    el.innerHTML=utenti.map(u=>`<div class="usr-row"><div style="flex:1"><div class="usr-email">${esc(u.email)}</div><div class="usr-name">${esc(u.nome||'')} <span class="role-chip editor" style="font-size:.52rem">${esc(u.ruolo||'editor')}</span></div></div><button class="usr-del" onclick="removeEditor('${esc(u.email)}')" title="Rimuovi">✕</button></div>`).join('');
+  }catch(e){el.innerHTML='<div style="font-size:.72rem;color:#b03030">Errore</div>';}
+}
+
+async function addEditor(){
+  if(ROLE!=='admin')return;
+  const email=document.getElementById('newUsrEmail').value.trim();
+  const nome=document.getElementById('newUsrNome').value.trim();
+  if(!email||!email.includes('@')){toast('Email non valida');return;}
+  try{
+    await gasPost('aggiungiEditor',null,null,null,{email,nome});
+    document.getElementById('newUsrEmail').value='';
+    document.getElementById('newUsrNome').value='';
+    toast('✓ Editor aggiunto: '+email);
+    setTimeout(loadEditorList,800);
+  }catch(e){toast('Errore aggiunta editor');}
+}
+
+async function removeEditor(email){
+  if(ROLE!=='admin'||!confirm('Rimuovere accesso a '+email+'?'))return;
+  try{
+    await gasPost('rimuoviEditor',null,null,null,{email});
+    toast('✓ Accesso rimosso: '+email);
+    setTimeout(loadEditorList,800);
+  }catch(e){toast('Errore rimozione');}
+}
+
+function logout(){clearAuth();location.reload();}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+async function init(){
+  loadLocal();
+  loadAuth();
+  initGasStatus();
+  initEtr();
+  registerSW();
+  // Auth: reader di default, nessun login wall
+  if(AUTH_USER&&AUTH_USER.ruolo==='admin'&&AUTH_USER.email===ADMIN_EMAIL_AUTH.toLowerCase()){
+    applyRole(AUTH_USER);
+  } else if(AUTH_USER&&GAS_URL){
+    const utente=await verifyEmail(AUTH_USER.email);
+    if(utente){saveAuth(utente);applyRole(utente);}
+    else{clearAuth();applyRole({ruolo:'reader',nome:'Lettore',email:''});}
+  } else if(AUTH_USER){
+    applyRole(AUTH_USER);
+  } else {
+    applyRole({ruolo:'reader',nome:'Lettore',email:''});
+  }
+  hideAuthScreen();
+  renderHome();
+  renderRegionGrid();
+  if(GAS_URL){
+    setSyncState('loading');
+    const ok=await syncAll();
+    if(ok){renderHome();setSyncState('ok');}
+    else{setSyncState('err');}
+  }
+}
+init();
+</script>
