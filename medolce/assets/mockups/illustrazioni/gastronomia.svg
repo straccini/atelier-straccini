@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <style>
+      .bg      { fill: #FAF6EF; }
+      .outline { fill: none; stroke: #0C1B33; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .navy    { fill: #0C1B33; }
+      .oro     { fill: #C9A96E; }
+      .verde   { fill: #5C6B3D; }
+      .rosso   { fill: #A8453B; }
+      .ombra   { fill: #0C1B33; opacity: 0.12; }
+    </style>
+  </defs>
+
+  <!-- Sfondo avorio -->
+  <rect class="bg" width="400" height="500"/>
+
+  <!-- Numero romano decorativo in alto -->
+  <text x="200" y="70" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="18" fill="#C9A96E" letter-spacing="6">— II —</text>
+
+  <!-- Bottiglia di vino a sinistra -->
+  <path class="navy" d="M 90,160
+    L 90,150 Q 90,145 95,145
+    L 105,145 Q 110,145 110,150
+    L 110,160
+    Q 112,170 118,185
+    Q 125,200 125,220
+    L 125,410
+    Q 125,420 115,420
+    L 85,420
+    Q 75,420 75,410
+    L 75,220
+    Q 75,200 82,185
+    Q 88,170 90,160 Z"/>
+  <!-- Etichetta bottiglia oro -->
+  <rect class="oro" x="82" y="290" width="36" height="60"/>
+  <line class="outline" x1="82" y1="305" x2="118" y2="305" stroke="#0C1B33" stroke-width="0.8"/>
+  <line class="outline" x1="88" y1="320" x2="112" y2="320" stroke="#0C1B33" stroke-width="0.8"/>
+  <!-- Tappo della bottiglia -->
+  <rect class="oro" x="88" y="130" width="24" height="20"/>
+  <line class="outline" x1="88" y1="150" x2="112" y2="150"/>
+
+  <!-- Ombra piatto -->
+  <ellipse class="ombra" cx="260" cy="385" rx="105" ry="10"/>
+
+  <!-- Piatto di ceramica (ellisse grande in prospettiva) -->
+  <ellipse cx="260" cy="370" rx="110" ry="30" fill="#FAF6EF"/>
+  <ellipse cx="260" cy="370" rx="110" ry="30" fill="none" stroke="#0C1B33" stroke-width="2.2"/>
+  <ellipse cx="260" cy="367" rx="95" ry="24" fill="none" stroke="#C9A96E" stroke-width="1"/>
+
+  <!-- Superficie del piatto (parte superiore visibile) -->
+  <path d="M 150,370 Q 150,340 260,340 Q 370,340 370,370" fill="#FAF6EF" stroke="none"/>
+
+  <!-- Salsa rossa (macchia irregolare) -->
+  <path class="rosso" d="M 210,360
+    Q 200,350 215,345
+    Q 235,338 260,342
+    Q 295,345 305,355
+    Q 310,365 295,368
+    Q 270,372 240,370
+    Q 220,368 210,360 Z"/>
+
+  <!-- Pesce stilizzato al centro -->
+  <path class="navy" d="M 225,355
+    Q 215,350 220,345
+    Q 235,335 265,338
+    Q 295,340 300,350
+    Q 302,358 295,362
+    Q 275,368 250,365
+    Q 232,362 225,355 Z"/>
+  <!-- Coda pesce -->
+  <path class="navy" d="M 300,350
+    L 315,340 L 312,355 L 315,368 L 300,360 Z"/>
+  <!-- Occhio pesce -->
+  <circle cx="235" cy="350" r="2" fill="#FAF6EF"/>
+
+  <!-- Rametto di rosmarino verde -->
+  <line x1="165" y1="335" x2="195" y2="365" stroke="#5C6B3D" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="170" y1="338" x2="175" y2="330" stroke="#5C6B3D" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="175" y1="345" x2="180" y2="337" stroke="#5C6B3D" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="180" y1="352" x2="185" y2="344" stroke="#5C6B3D" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="185" y1="358" x2="190" y2="350" stroke="#5C6B3D" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="170" y1="342" x2="163" y2="347" stroke="#5C6B3D" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="177" y1="350" x2="170" y2="355" stroke="#5C6B3D" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="183" y1="357" x2="176" y2="362" stroke="#5C6B3D" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Due olive nel piatto -->
+  <ellipse class="verde" cx="295" cy="365" rx="6" ry="4"/>
+  <ellipse class="verde" cx="310" cy="362" rx="6" ry="4"/>
+</svg>

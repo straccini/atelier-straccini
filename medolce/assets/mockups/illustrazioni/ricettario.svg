@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <style>
+      .bg      { fill: #FAF6EF; }
+      .outline { fill: none; stroke: #0C1B33; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+      .navy    { fill: #0C1B33; }
+      .oro     { fill: #C9A96E; }
+      .verde   { fill: #5C6B3D; }
+      .avorio  { fill: #FAF6EF; }
+      .ombra   { fill: #0C1B33; opacity: 0.12; }
+      .farina  { fill: #0C1B33; opacity: 0.3; }
+    </style>
+  </defs>
+
+  <!-- Sfondo avorio -->
+  <rect class="bg" width="400" height="500"/>
+
+  <!-- Numero romano decorativo in alto -->
+  <text x="200" y="70" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="18" fill="#C9A96E" letter-spacing="6">— III —</text>
+
+  <!-- Mattarello diagonale in oro (accento caldo) -->
+  <g transform="rotate(-20 200 280)">
+    <!-- Impugnature -->
+    <rect class="oro" x="70" y="270" width="30" height="18" rx="3"/>
+    <rect class="oro" x="300" y="270" width="30" height="18" rx="3"/>
+    <!-- Corpo centrale -->
+    <rect class="oro" x="100" y="265" width="200" height="28" rx="4"/>
+    <!-- Linee decorative sul mattarello -->
+    <line x1="130" y1="275" x2="130" y2="285" stroke="#0C1B33" stroke-width="0.8"/>
+    <line x1="145" y1="275" x2="145" y2="285" stroke="#0C1B33" stroke-width="0.8"/>
+    <line x1="255" y1="275" x2="255" y2="285" stroke="#0C1B33" stroke-width="0.8"/>
+    <line x1="270" y1="275" x2="270" y2="285" stroke="#0C1B33" stroke-width="0.8"/>
+    <!-- Outline mattarello -->
+    <rect x="70" y="270" width="30" height="18" rx="3" fill="none" stroke="#0C1B33" stroke-width="2.2"/>
+    <rect x="300" y="270" width="30" height="18" rx="3" fill="none" stroke="#0C1B33" stroke-width="2.2"/>
+    <rect x="100" y="265" width="200" height="28" rx="4" fill="none" stroke="#0C1B33" stroke-width="2.2"/>
+  </g>
+
+  <!-- Ombra ciotola -->
+  <ellipse class="ombra" cx="150" cy="425" rx="80" ry="8"/>
+
+  <!-- Ciotola di farina (forma a calotta) -->
+  <path class="avorio" d="M 80,380
+    Q 80,420 150,425
+    Q 220,420 220,380
+    L 210,380
+    Q 210,415 150,418
+    Q 90,415 90,380 Z"/>
+  <path class="outline" d="M 80,380
+    Q 80,420 150,425
+    Q 220,420 220,380"/>
+  <!-- Bordo superiore della ciotola -->
+  <ellipse cx="150" cy="380" rx="70" ry="10" fill="#FAF6EF"/>
+  <ellipse cx="150" cy="380" rx="70" ry="10" fill="none" stroke="#0C1B33" stroke-width="2.2"/>
+
+  <!-- Puntini di farina nella ciotola -->
+  <circle class="farina" cx="120" cy="378" r="1.5"/>
+  <circle class="farina" cx="135" cy="381" r="1.5"/>
+  <circle class="farina" cx="150" cy="376" r="1.5"/>
+  <circle class="farina" cx="165" cy="380" r="1.5"/>
+  <circle class="farina" cx="180" cy="378" r="1.5"/>
+  <circle class="farina" cx="110" cy="383" r="1.5"/>
+  <circle class="farina" cx="195" cy="382" r="1.5"/>
+  <circle class="farina" cx="140" cy="384" r="1.5"/>
+  <circle class="farina" cx="170" cy="384" r="1.5"/>
+
+  <!-- Farina che fuoriesce / spolverata accanto alla ciotola -->
+  <circle class="farina" cx="240" cy="400" r="1.2"/>
+  <circle class="farina" cx="250" cy="410" r="1.2"/>
+  <circle class="farina" cx="245" cy="415" r="1.2"/>
+  <circle class="farina" cx="260" cy="405" r="1.2"/>
+  <circle class="farina" cx="255" cy="420" r="1.2"/>
+
+  <!-- Due uova a destra -->
+  <g>
+    <ellipse class="ombra" cx="295" cy="420" rx="28" ry="5"/>
+    <ellipse class="avorio" cx="290" cy="410" rx="18" ry="24"/>
+    <ellipse cx="290" cy="410" rx="18" ry="24" fill="none" stroke="#0C1B33" stroke-width="2.2"/>
+    <!-- Highlight uovo -->
+    <ellipse cx="283" cy="400" rx="4" ry="6" fill="#FFFFFF" opacity="0.6"/>
+
+    <ellipse class="avorio" cx="325" cy="415" rx="18" ry="24"/>
+    <ellipse cx="325" cy="415" rx="18" ry="24" fill="none" stroke="#0C1B33" stroke-width="2.2"/>
+    <ellipse cx="319" cy="405" rx="4" ry="6" fill="#FFFFFF" opacity="0.6"/>
+  </g>
+
+  <!-- Foglia di basilico verde -->
+  <g transform="translate(310 130) rotate(15)">
+    <path class="verde" d="M 0,0
+      Q -18,-10 -22,-35
+      Q -15,-55 0,-60
+      Q 15,-55 22,-35
+      Q 18,-10 0,0 Z"/>
+    <line x1="0" y1="0" x2="0" y2="-60" stroke="#0C1B33" stroke-width="1.2"/>
+    <line x1="0" y1="-15" x2="-12" y2="-22" stroke="#0C1B33" stroke-width="0.8"/>
+    <line x1="0" y1="-15" x2="12" y2="-22" stroke="#0C1B33" stroke-width="0.8"/>
+    <line x1="0" y1="-30" x2="-14" y2="-35" stroke="#0C1B33" stroke-width="0.8"/>
+    <line x1="0" y1="-30" x2="14" y2="-35" stroke="#0C1B33" stroke-width="0.8"/>
+    <line x1="0" y1="-45" x2="-10" y2="-48" stroke="#0C1B33" stroke-width="0.8"/>
+    <line x1="0" y1="-45" x2="10" y2="-48" stroke="#0C1B33" stroke-width="0.8"/>
+    <path d="M 0,0
+      Q -18,-10 -22,-35
+      Q -15,-55 0,-60
+      Q 15,-55 22,-35
+      Q 18,-10 0,0 Z" fill="none" stroke="#0C1B33" stroke-width="2.2"/>
+  </g>
+
+  <!-- Piccolo rametto basilico sotto -->
+  <g transform="translate(75 155)">
+    <line x1="0" y1="0" x2="0" y2="25" stroke="#5C6B3D" stroke-width="2"/>
+    <ellipse class="verde" cx="-8" cy="5" rx="6" ry="3" transform="rotate(-30 -8 5)"/>
+    <ellipse class="verde" cx="8" cy="8" rx="6" ry="3" transform="rotate(30 8 8)"/>
+    <ellipse class="verde" cx="-6" cy="18" rx="5" ry="2.5" transform="rotate(-30 -6 18)"/>
+  </g>
+</svg>

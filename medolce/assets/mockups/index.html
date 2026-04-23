@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M'è dolce — Atelier Sinestetico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --avorio: #FAF6EF;
+    --nero-caldo: #1A1410;
+    --oro: #C9A96E;
+    --navy: #0C1B33;
+    --pietra: #8A7F71;
+    --latte: #FFFFFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--nero-caldo);
+    background: var(--avorio);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .display { font-family: 'Cormorant Garamond', serif; font-weight: 400; letter-spacing: 0.01em; }
+  a { color: inherit; text-decoration: none; }
+
+  /* Header */
+  .site-header {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 20px 40px;
+    display: flex; justify-content: space-between; align-items: center;
+    z-index: 100;
+    background: rgba(250, 246, 239, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(201, 169, 110, 0.2);
+  }
+  .logo { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 500; font-style: italic; }
+  .logo span { color: var(--oro); }
+  nav ul { display: flex; gap: 32px; list-style: none; }
+  nav a {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em;
+    padding-bottom: 4px; border-bottom: 1px solid transparent;
+    transition: border-color 300ms ease;
+  }
+  nav a:hover { border-bottom-color: var(--oro); }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    background: linear-gradient(rgba(12, 27, 51, 0.55), rgba(12, 27, 51, 0.35)),
+                url('https://images.unsplash.com/photo-1511381939415-e44015466834?w=1920&q=80') center/cover;
+    color: var(--latte);
+    text-align: center;
+    padding: 0 24px;
+  }
+  .hero-content { max-width: 780px; }
+  .hero .eyebrow {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.35em;
+    color: var(--oro); margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(48px, 7vw, 88px);
+    line-height: 1.05; font-weight: 300; font-style: italic;
+    margin-bottom: 24px;
+  }
+  .hero h1 em { color: var(--oro); font-style: italic; }
+  .hero p {
+    font-size: 19px; line-height: 1.6; max-width: 560px; margin: 0 auto 48px;
+    opacity: 0.92;
+  }
+  .hero .scroll-hint {
+    position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.3em;
+    opacity: 0.7;
+  }
+
+  /* Section base */
+  section { padding: 120px 40px; max-width: 1280px; margin: 0 auto; }
+  .section-header { text-align: center; margin-bottom: 80px; }
+  .section-header .eyebrow {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.3em;
+    color: var(--oro); margin-bottom: 16px; display: block;
+  }
+  .section-header h2 {
+    font-size: clamp(36px, 4.5vw, 52px);
+    line-height: 1.1; margin-bottom: 16px;
+  }
+  .section-header .lead {
+    color: var(--pietra); max-width: 580px; margin: 0 auto;
+    font-size: 18px;
+  }
+
+  /* Tre categorie */
+  .categorie {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+  }
+  .categoria {
+    cursor: pointer; transition: transform 400ms ease;
+  }
+  .categoria-media {
+    aspect-ratio: 4/5; overflow: hidden; margin-bottom: 24px;
+    background: var(--avorio);
+    border: 1px solid rgba(201, 169, 110, 0.3);
+  }
+  .categoria-media img, .categoria-media object {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform 600ms ease-out;
+  }
+  .categoria:hover .categoria-media img,
+  .categoria:hover .categoria-media object { transform: scale(1.04); }
+  .categoria-numero {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 14px; color: var(--oro); margin-bottom: 8px;
+    letter-spacing: 0.1em;
+  }
+  .categoria h3 {
+    font-size: 32px; font-weight: 400; margin-bottom: 12px;
+    transition: color 300ms ease;
+  }
+  .categoria:hover h3 { color: var(--navy); }
+  .categoria p {
+    color: var(--pietra); font-size: 16px; max-width: 360px;
+  }
+  .categoria .cta {
+    margin-top: 20px; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.15em; color: var(--nero-caldo);
+    border-bottom: 1px solid var(--oro); padding-bottom: 3px;
+    display: inline-block;
+  }
+
+  /* Featured pralina */
+  .featured {
+    background: var(--navy); color: var(--avorio);
+    margin: 0; padding: 120px 40px; max-width: none;
+  }
+  .featured-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+  }
+  .featured-img {
+    aspect-ratio: 1/1; overflow: hidden;
+  }
+  .featured-img img { width: 100%; height: 100%; object-fit: cover; }
+  .featured-text .eyebrow {
+    color: var(--oro); font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.3em; margin-bottom: 24px; display: block;
+  }
+  .featured-text h2 {
+    font-size: 56px; font-weight: 300; font-style: italic;
+    line-height: 1.1; margin-bottom: 32px;
+  }
+  .featured-citazione {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 22px; line-height: 1.6;
+    border-left: 2px solid var(--oro); padding-left: 24px;
+    margin-bottom: 32px; color: rgba(250, 246, 239, 0.92);
+  }
+  .featured-citazione cite {
+    display: block; font-style: normal; font-family: 'Inter', sans-serif;
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.15em;
+    margin-top: 16px; color: var(--oro);
+  }
+  .featured-meta {
+    display: flex; gap: 40px; font-size: 13px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: rgba(250, 246, 239, 0.7);
+  }
+  .featured-meta strong { display: block; font-size: 16px; color: var(--oro); letter-spacing: 0.02em; margin-bottom: 4px; }
+
+  /* Territorio */
+  .territorio-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .luogo {
+    aspect-ratio: 1/1; position: relative; overflow: hidden;
+    cursor: pointer;
+  }
+  .luogo img { width: 100%; height: 100%; object-fit: cover; transition: transform 600ms ease; }
+  .luogo:hover img { transform: scale(1.03); }
+  .luogo-label {
+    position: absolute; bottom: 16px; left: 16px;
+    background: var(--avorio); padding: 8px 14px;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em;
+  }
+
+  /* Footer */
+  footer {
+    background: var(--navy); color: var(--avorio);
+    padding: 80px 40px 40px;
+  }
+  .footer-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px;
+    border-bottom: 1px solid rgba(201, 169, 110, 0.2);
+    padding-bottom: 60px; margin-bottom: 32px;
+  }
+  footer h4 {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 24px; font-weight: 400; margin-bottom: 16px;
+    color: var(--oro);
+  }
+  footer p, footer li {
+    font-size: 14px; line-height: 1.8;
+    color: rgba(250, 246, 239, 0.75);
+  }
+  footer ul { list-style: none; }
+  footer a:hover { color: var(--oro); }
+  .footer-bottom {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: rgba(250, 246, 239, 0.5);
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    section { padding: 80px 24px; }
+    .categorie, .territorio-grid, .featured-inner, .footer-inner {
+      grid-template-columns: 1fr; gap: 40px;
+    }
+    nav ul { display: none; }
+    .site-header { padding: 16px 24px; }
+    .hero h1 { font-size: 44px; }
+    .featured h2 { font-size: 38px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="#" class="logo">M'è <span>dolce</span></a>
+  <nav>
+    <ul>
+      <li><a href="#categorie">Le tre vie</a></li>
+      <li><a href="#praline">Praline</a></li>
+      <li><a href="#gastronomia">Gastronomia</a></li>
+      <li><a href="#ricettario">Ricettario</a></li>
+      <li><a href="#">Atelier</a></li>
+    </ul>
+  </nav>
+</header>
+
+<section class="hero" style="padding: 0;">
+  <div class="hero-content">
+    <div class="eyebrow">Atelier Sinestetico · dal 2024</div>
+    <h1>M'è <em>dolce</em><br>in questo mare</h1>
+    <p>Praline che nascono dalla poesia. Ricette che portano un luogo. Un atelier dove il gusto incontra il testo, la musica, la memoria.</p>
+  </div>
+  <div class="scroll-hint">↓ scorri</div>
+</section>
+
+<section id="categorie">
+  <div class="section-header">
+    <span class="eyebrow">Le tre vie</span>
+    <h2>Una casa, tre linguaggi</h2>
+    <p class="lead">Ogni via è una porta d'ingresso al medesimo progetto. Scegli da dove entrare.</p>
+  </div>
+
+  <div class="categorie">
+    <a href="#praline" class="categoria">
+      <div class="categoria-media">
+        <object type="image/svg+xml" data="illustrazioni/medolce.svg" aria-label="Illustrazione pralina MeDolce"></object>
+      </div>
+      <div class="categoria-numero">— I —</div>
+      <h3>MeDolce</h3>
+      <p>Praline letterarie. Ogni composizione nasce da una pagina, un verso, una musica.</p>
+      <span class="cta">Entra nell'Atelier</span>
+    </a>
+
+    <a href="#gastronomia" class="categoria">
+      <div class="categoria-media">
+        <object type="image/svg+xml" data="illustrazioni/gastronomia.svg" aria-label="Illustrazione piatto di gastronomia"></object>
+      </div>
+      <div class="categoria-numero">— II —</div>
+      <h3>Gastronomia</h3>
+      <p>La cucina del territorio. Ricette storiche, cantine, piatti che raccontano le Marche.</p>
+      <span class="cta">Esplora il territorio</span>
+    </a>
+
+    <a href="#ricettario" class="categoria">
+      <div class="categoria-media">
+        <object type="image/svg+xml" data="illustrazioni/ricettario.svg" aria-label="Illustrazione ingredienti del ricettario"></object>
+      </div>
+      <div class="categoria-numero">— III —</div>
+      <h3>Ricettario</h3>
+      <p>La cucina di casa. Preparazioni per ogni giorno, curate, misurate, provate.</p>
+      <span class="cta">Apri il ricettario</span>
+    </a>
+  </div>
+</section>
+
+<section class="featured" id="praline">
+  <div class="featured-inner">
+    <div class="featured-img">
+      <img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=1200&q=80" alt="Pralina L'Infinito">
+    </div>
+    <div class="featured-text">
+      <span class="eyebrow">Ultima pralina · categoria A1</span>
+      <h2>L'Infinito</h2>
+      <blockquote class="featured-citazione">
+        Sempre caro mi fu quest'ermo colle,<br>
+        e questa siepe, che da tanta parte<br>
+        dell'ultimo orizzonte il guardo esclude.
+        <cite>Giacomo Leopardi, 1819</cite>
+      </blockquote>
+      <p style="color: rgba(250,246,239,0.85); margin-bottom: 32px;">
+        Pralina fondente 70% Valrhona, ganache al cardamomo e bergamotto fresco.
+        Il guscio ricorda la siepe: opaco, fermo. Il cuore apre verso l'orizzonte.
+      </p>
+      <div class="featured-meta">
+        <div><strong>Valrhona 70%</strong> cioccolato fondente</div>
+        <div><strong>Cardamomo · Bergamotto</strong> ganache</div>
+        <div><strong>CPT-PRA-INF001</strong> codice</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="gastronomia">
+  <div class="section-header">
+    <span class="eyebrow">Gastronomia</span>
+    <h2>Il territorio, piatto a piatto</h2>
+    <p class="lead">Le ricette delle Marche selezionate per luogo, stagione e cantina in abbinamento.</p>
+  </div>
+
+  <div class="territorio-grid">
+    <div class="luogo">
+      <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=900&q=80" alt="Piatto di pesce marchigiano">
+      <span class="luogo-label">Pesaro · Brodetto</span>
+    </div>
+    <div class="luogo">
+      <img src="https://images.unsplash.com/photo-1598866594230-a7c12756260f?w=900&q=80" alt="Tagliatelle al tartufo">
+      <span class="luogo-label">Acqualagna · Tartufo</span>
+    </div>
+    <div class="luogo">
+      <img src="https://images.unsplash.com/photo-1630431341973-02e1b662ec35?w=900&q=80" alt="Olive ascolane">
+      <span class="luogo-label">Ascoli · Olive</span>
+    </div>
+  </div>
+</section>
+
+<section id="ricettario">
+  <div class="section-header">
+    <span class="eyebrow">Ricettario</span>
+    <h2>La cucina di casa</h2>
+    <p class="lead">Ricette misurate e provate. Importate dalle fonti del notebook M'è dolce e normalizzate con cura.</p>
+  </div>
+
+  <div class="territorio-grid">
+    <div class="luogo">
+      <img src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=900&q=80" alt="Ricetta dolce">
+      <span class="luogo-label">Dolci · 12</span>
+    </div>
+    <div class="luogo">
+      <img src="https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?w=900&q=80" alt="Ricetta primo piatto">
+      <span class="luogo-label">Primi · 18</span>
+    </div>
+    <div class="luogo">
+      <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=900&q=80" alt="Lievitati">
+      <span class="luogo-label">Lievitati · 7</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <h4>M'è dolce</h4>
+      <p>Atelier Sinestetico dove il gusto incontra il testo, la musica, la memoria. Un progetto curato da Silvano Straccini.</p>
+    </div>
+    <div>
+      <h4>Duemilamusei</h4>
+      <ul>
+        <li>Consulenza culturale e museale</li>
+        <li>Fano · Marche · Italia</li>
+        <li><a href="mailto:s.straccini@gmail.com">s.straccini@gmail.com</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Museo delle Terre Marchigiane</h4>
+      <ul>
+        <li>San Lorenzo in Campo</li>
+        <li>Museo di famiglia</li>
+        <li><a href="#">Visita il museo →</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Duemilamusei</span>
+    <span>Mockup v3.3 · concept</span>
+  </div>
+</footer>
+
+</body>
+</html>
