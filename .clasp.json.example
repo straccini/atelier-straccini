@@ -1,0 +1,9 @@
+{
+  "_comment": "Rinomina questo file in .clasp.json e inserisci il tuo scriptId per usare clasp.",
+  "_install": "npm install -g @google/clasp && clasp login",
+  "_pushCmd": "clasp push  (sincronizza Code.gs sul progetto Apps Script remoto)",
+  "_deployCmd": "clasp deploy --deploymentId <ID> --description 'aggiornamento'  (nuova versione, stesso URL)",
+  "_findScriptId": "Apri lo script editor in browser, l'ID è nell'URL: script.google.com/d/<SCRIPT_ID>/edit",
+  "scriptId": "INCOLLA-QUI-LO-SCRIPT-ID",
+  "rootDir": "."
+}
